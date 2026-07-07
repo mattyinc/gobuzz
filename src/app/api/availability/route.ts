@@ -9,7 +9,7 @@ import {
   timeToMinutes,
   type FacilityId,
 } from "@/lib/facilities";
-import { bookedBySlot } from "@/lib/db";
+import { bookedBySlot } from "@/lib/booking-store";
 
 export type Slot = {
   start: string;
@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
   }
 
   const facility = FACILITIES[facilityId];
-  const taken = bookedBySlot(facilityId, date);
+  const taken = await bookedBySlot(facilityId, date);
   const now = nowInAddis();
 
   const slots: Slot[] = slotsForDate(facility, date).map((start) => {

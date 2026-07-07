@@ -27,12 +27,30 @@ function getDb(): Database.Database {
       name TEXT NOT NULL,
       email TEXT NOT NULL,
       phone TEXT,
+      status TEXT NOT NULL DEFAULT 'confirmed',
+      notes TEXT,
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
     CREATE INDEX IF NOT EXISTS idx_bookings_slot ON bookings (facility, date, start);
   `);
+  migrateDb(db);
   return db;
 }
+
+function migrateDb(database: Database.Database) {
+  const columns = database.prepare(`PRAGMA table_info(bookings)`).all() as { name: string }[];
+  const names = new Set(columns.map((column) => column.name));
+
+  if (!names.has("status")) {
+    database.exec(`ALTER TABLE bookings ADD COLUMN status TEXT NOT NULL DEFAULT 'confirmed'`);
+  }
+
+  if (!names.has("notes")) {
+    database.exec(`ALTER TABLE bookings ADD COLUMN notes TEXT`);
+  }
+}
+
+export type BookingStatus = "confirmed" | "checked-in" | "completed" | "cancelled" | "no-show";
 
 export type BookingRow = {
   id: number;
@@ -44,6 +62,8 @@ export type BookingRow = {
   name: string;
   email: string;
   phone: string | null;
+  status: BookingStatus;
+  notes: string | null;
   created_at: string;
 };
 
@@ -52,7 +72,7 @@ export function bookedBySlot(facility: FacilityId, date: string): Map<string, nu
   const rows = getDb()
     .prepare(
       `SELECT start, SUM(spots) AS taken FROM bookings
-       WHERE facility = ? AND date = ? GROUP BY start`
+       WHERE facility = ? AND date = ? AND status IN ('confirmed', 'checked-in') GROUP BY start`
     )
     .all(facility, date) as { start: string; taken: number }[];
   return new Map(rows.map((r) => [r.start, r.taken]));
@@ -89,7 +109,7 @@ export function createBooking(input: {
     const row = d
       .prepare(
         `SELECT COALESCE(SUM(spots), 0) AS taken FROM bookings
-         WHERE facility = ? AND date = ? AND start = ?`
+         WHERE facility = ? AND date = ? AND start = ? AND status IN ('confirmed', 'checked-in')`
       )
       .get(input.facility, input.date, input.start) as { taken: number };
 
@@ -128,4 +148,67 @@ export function getBookingByCode(code: string): BookingRow | undefined {
   return getDb()
     .prepare(`SELECT * FROM bookings WHERE code = ?`)
     .get(code.toUpperCase()) as BookingRow | undefined;
+}
+
+export function listBookings(options: {
+  from?: string;
+  to?: string;
+  status?: BookingStatus | "all";
+} = {}): BookingRow[] {
+  const filters: string[] = [];
+  const params: unknown[] = [];
+
+  if (options.from) {
+    filters.push("date >= ?");
+    params.push(options.from);
+  }
+
+  if (options.to) {
+    filters.push("date <= ?");
+    params.push(options.to);
+  }
+
+  if (options.status && options.status !== "all") {
+    filters.push("status = ?");
+    params.push(options.status);
+  }
+
+  const where = filters.length ? `WHERE ${filters.join(" AND ")}` : "";
+
+  return getDb()
+    .prepare(
+      `SELECT * FROM bookings ${where}
+       ORDER BY date ASC, start ASC, created_at DESC
+       LIMIT 250`
+    )
+    .all(...params) as BookingRow[];
+}
+
+export function updateBooking(
+  id: string,
+  input: Partial<{
+    date: string;
+    start: string;
+    spots: number;
+    status: BookingStatus;
+    notes: string | null;
+  }>
+): BookingRow | undefined {
+  const allowed = ["date", "start", "spots", "status", "notes"] as const;
+  const entries = allowed
+    .filter((key) => input[key] !== undefined)
+    .map((key) => [key, input[key]] as const);
+
+  if (!entries.length) {
+    return getDb().prepare(`SELECT * FROM bookings WHERE id = ?`).get(id) as BookingRow | undefined;
+  }
+
+  const assignments = entries.map(([key]) => `${key} = ?`).join(", ");
+  const values = entries.map(([, value]) => value);
+
+  getDb()
+    .prepare(`UPDATE bookings SET ${assignments} WHERE id = ?`)
+    .run(...values, id);
+
+  return getDb().prepare(`SELECT * FROM bookings WHERE id = ?`).get(id) as BookingRow | undefined;
 }

@@ -12,6 +12,8 @@ Go'Buzz serves wellness-minded adults in Addis Ababa who want a premium, calm, t
 
 The site introduces Go'Buzz Wellness as a private wellness club, communicates the Move / Think / Recover method, builds confidence in the facilities, and guides visitors into booking sauna or ice bath sessions. Success means the brand feels credible and distinctive while the booking path remains clear.
 
+The `/admin` surface is separate from the public brand site. It is an authenticated operational tool for staff to review bookings and make light changes to session details and status.
+
 ## Brand Personality
 
 Calm, intentional, premium. The voice should feel grounded and quietly confident: recovery as a serious practice, not a trend or a noisy fitness pitch.

@@ -45,3 +45,5 @@ data/
 
 # temporary static export staging
 .pages-build-api/
+.pages-build-admin/
+.pages-build-middleware.ts

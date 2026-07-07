@@ -8,7 +8,7 @@ import {
   timeToMinutes,
   type FacilityId,
 } from "@/lib/facilities";
-import { createBooking, SlotFullError } from "@/lib/db";
+import { createBooking, SlotFullError } from "@/lib/booking-store";
 
 type Body = {
   facility?: FacilityId;
@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const booking = createBooking({
+    const booking = await createBooking({
       facility: facilityId,
       date,
       start,

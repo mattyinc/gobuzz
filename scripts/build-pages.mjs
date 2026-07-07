@@ -4,22 +4,38 @@ import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
-const apiDir = join(root, "src", "app", "api");
-const tempApiDir = join(root, ".pages-build-api");
+const backendPaths = [
+  ["src/app/api", ".pages-build-api"],
+  ["src/app/admin", ".pages-build-admin"],
+  ["middleware.ts", ".pages-build-middleware.ts"],
+];
 
-if (existsSync(tempApiDir)) {
-  if (!existsSync(apiDir)) {
-    renameSync(tempApiDir, apiDir);
-  } else {
-    rmSync(tempApiDir, { recursive: true, force: true });
+function restoreStagedPath(source, temp) {
+  if (existsSync(temp)) {
+    if (!existsSync(source)) {
+      renameSync(temp, source);
+    } else {
+      rmSync(temp, { recursive: true, force: true });
+    }
   }
 }
 
-const movedApi = existsSync(apiDir);
+const paths = backendPaths.map(([source, temp]) => ({
+  source: join(root, source),
+  temp: join(root, temp),
+  moved: false,
+}));
+
+for (const item of paths) {
+  restoreStagedPath(item.source, item.temp);
+  item.moved = existsSync(item.source);
+}
 
 try {
-  if (movedApi) {
-    renameSync(apiDir, tempApiDir);
+  for (const item of paths) {
+    if (item.moved) {
+      renameSync(item.source, item.temp);
+    }
   }
 
   const nextCommand = process.platform === "win32" ? "next.cmd" : "next";
@@ -39,7 +55,9 @@ try {
     writeFileSync(join(root, "out", ".nojekyll"), "");
   }
 } finally {
-  if (movedApi && existsSync(tempApiDir)) {
-    renameSync(tempApiDir, apiDir);
+  for (const item of paths.toReversed()) {
+    if (item.moved && existsSync(item.temp)) {
+      renameSync(item.temp, item.source);
+    }
   }
 }
