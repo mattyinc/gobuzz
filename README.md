@@ -1,36 +1,34 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Go'Buzz Wellness — gobuzzwellness.com rebuild
 
-## Getting Started
+Premium wellness-club site with a live booking system for the sauna rooms and ice bath.
+Next.js 16 (App Router) · Tailwind v4 · better-sqlite3.
 
-First, run the development server:
+## Run
 
 ```bash
-npm run dev
+npm install
+npm run dev        # development, http://localhost:3000
 # or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm run build && npm start
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Bookings are stored in `data/gobuzz.db` (created automatically, git-ignored).
+Delete that file to reset all bookings.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Pages
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- `/` — marketing site (hero, method, facilities, membership, contact)
+- `/book` — 3-step booking flow with live availability
 
-## Learn More
+## API
 
-To learn more about Next.js, take a look at the following resources:
+- `GET /api/availability?facility=sauna-men|sauna-women|ice-bath&date=YYYY-MM-DD`
+- `POST /api/bookings` — `{ facility, date, start, spots, name, email, phone? }`
+- `GET /api/bookings/:code` — look up a booking (for the future client portal)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Where things live
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Business rules (capacities, session lengths, hours): `src/lib/facilities.ts`
+- Database layer: `src/lib/db.ts`
+- Design tokens & theming: `src/app/globals.css` + `design-system/MASTER.md`
+- Brand marks (extracted from the original vector PDF): `src/components/logo.tsx`
