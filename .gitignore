@@ -42,3 +42,6 @@ next-env.d.ts
 
 # sqlite booking data
 data/
+
+# temporary static export staging
+.pages-build-api/

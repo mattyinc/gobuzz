@@ -20,6 +20,9 @@ import {
   FACILITIES,
   FACILITY_IDS,
   bookableDates,
+  minutesToTime,
+  slotsForDate,
+  timeToMinutes,
   type Facility,
   type FacilityId,
 } from "@/lib/facilities";
@@ -44,6 +47,7 @@ type Booking = {
 };
 
 const stepLabels = ["Experience", "Time", "Details"];
+const isStaticPagesBuild = process.env.NEXT_PUBLIC_STATIC_PAGES === "true";
 
 const facilityImages: Record<FacilityId, { src: string; alt: string; flip?: boolean }> = {
   "sauna-men": {
@@ -95,6 +99,23 @@ export function BookingFlow() {
   const selectedSlot = slots?.find((s) => s.start === start) ?? null;
 
   const loadSlots = useCallback(async (f: FacilityId, d: string) => {
+    if (isStaticPagesBuild) {
+      const staticSlots = slotsForDate(FACILITIES[f], d).map((slotStart) => {
+        const startMinutes = timeToMinutes(slotStart);
+
+        return {
+          start: slotStart,
+          end: minutesToTime(startMinutes + FACILITIES[f].duration),
+          available: FACILITIES[f].capacity,
+          capacity: FACILITIES[f].capacity,
+          past: false,
+        };
+      });
+
+      setSlots(staticSlots);
+      return;
+    }
+
     setSlotsLoading(true);
     setSlots(null);
     try {
@@ -126,6 +147,12 @@ export function BookingFlow() {
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!facilityId || !start) return;
+
+    if (isStaticPagesBuild) {
+      setError("Online booking needs the server build. This GitHub Pages preview is static.");
+      return;
+    }
+
     setSubmitting(true);
     setError(null);
     try {
