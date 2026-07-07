@@ -26,6 +26,7 @@ import {
   type Facility,
   type FacilityId,
 } from "@/lib/facilities";
+import { publicAsset } from "@/lib/paths";
 import { PulseLine } from "./pulse-line";
 
 type Slot = {
@@ -51,16 +52,16 @@ const isStaticPagesBuild = process.env.NEXT_PUBLIC_STATIC_PAGES === "true";
 
 const facilityImages: Record<FacilityId, { src: string; alt: string; flip?: boolean }> = {
   "sauna-men": {
-    src: "/facilities/sauna.jpg",
+    src: publicAsset("/facilities/sauna.jpg"),
     alt: "Cedar-lined sauna behind a full-height glass wall",
   },
   "sauna-women": {
-    src: "/facilities/sauna.jpg",
+    src: publicAsset("/facilities/sauna.jpg"),
     alt: "Cedar-lined sauna behind a full-height glass wall",
     flip: true,
   },
   "ice-bath": {
-    src: "/facilities/ice-bath.jpg",
+    src: publicAsset("/facilities/ice-bath.jpg"),
     alt: "Wood-clad single-occupancy ice bath with steps",
   },
 };

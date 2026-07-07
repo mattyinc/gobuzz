@@ -16,6 +16,7 @@ import { Reveal } from "@/components/reveal";
 import { PulseLine } from "@/components/pulse-line";
 import { LogoMark } from "@/components/logo";
 import { FoundingForm } from "@/components/founding-form";
+import { publicAsset } from "@/lib/paths";
 
 const marqueeItems = [
   "Sauna Sessions",
@@ -250,7 +251,7 @@ export default function Home() {
                   >
                     <div className="relative h-56 overflow-hidden">
                       <Image
-                        src="/facilities/sauna.jpg"
+                        src={publicAsset("/facilities/sauna.jpg")}
                         alt="Cedar-lined sauna behind a full-height glass wall"
                         fill
                         sizes="(min-width: 1024px) 33vw, 100vw"
@@ -304,7 +305,7 @@ export default function Home() {
                 >
                   <div className="relative h-56 overflow-hidden">
                     <Image
-                      src="/facilities/ice-bath.jpg"
+                      src={publicAsset("/facilities/ice-bath.jpg")}
                       alt="Wood-clad single-occupancy ice bath with steps"
                       fill
                       sizes="(min-width: 1024px) 33vw, 100vw"
