@@ -10,7 +10,6 @@ const nextConfig: NextConfig = {
   ...(isGithubPages
     ? {
         output: "export",
-        trailingSlash: true,
         basePath,
         assetPrefix: basePath || undefined,
         images: {
