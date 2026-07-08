@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Manrope } from "next/font/google";
 import localFont from "next/font/local";
+import { MotionProvider } from "@/components/motion-provider";
+import { Cursor } from "@/components/cursor";
 import "./globals.css";
 
 const mackinac = localFont({
@@ -45,7 +47,10 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body className="grain min-h-full flex flex-col antialiased">
-        {children}
+        <MotionProvider>
+          <Cursor />
+          {children}
+        </MotionProvider>
       </body>
     </html>
   );

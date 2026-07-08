@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, type ElementType, type ReactNode } from "react";
+import { useRef, type ElementType, type ReactNode } from "react";
+import { motion, useInView } from "motion/react";
 
 type RevealProps = {
   children: ReactNode;
@@ -10,35 +11,36 @@ type RevealProps = {
   delay?: number;
 };
 
-/** Fades content up once it enters the viewport. */
-export function Reveal({ children, as: Tag = "div", className = "", delay = 0 }: RevealProps) {
-  const ref = useRef<HTMLElement>(null);
+const TAG_MAP: Partial<Record<string, ElementType>> = {
+  div: motion.div,
+  section: motion.section,
+  article: motion.article,
+  span: motion.span,
+  p: motion.p,
+  ul: motion.ul,
+  li: motion.li,
+};
 
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (entry.isIntersecting) {
-            entry.target.classList.add("is-visible");
-            observer.unobserve(entry.target);
-          }
-        }
-      },
-      { threshold: 0.12, rootMargin: "0px 0px -40px 0px" }
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
+/** Scroll-triggered reveal: fades, rises, and scales up with spring physics. */
+export function Reveal({ children, as = "div", className = "", delay = 0 }: RevealProps) {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, margin: "0px 0px -60px 0px" });
+  const MotionEl = TAG_MAP[as as string] ?? motion.div;
 
   return (
-    <Tag
+    <MotionEl
       ref={ref}
-      className={`reveal ${className}`}
-      style={delay ? ({ "--reveal-delay": `${delay}ms` } as React.CSSProperties) : undefined}
+      className={className}
+      initial={{ opacity: 0, y: 36, scale: 0.97 }}
+      animate={isInView ? { opacity: 1, y: 0, scale: 1 } : {}}
+      transition={{
+        type: "spring",
+        stiffness: 52,
+        damping: 20,
+        delay: delay / 1000,
+      }}
     >
       {children}
-    </Tag>
+    </MotionEl>
   );
 }

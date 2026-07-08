@@ -1,7 +1,5 @@
 import Link from "next/link";
-import Image from "next/image";
 import {
-  ArrowRight,
   ArrowUpRight,
   CalendarCheck,
   Clock,
@@ -14,8 +12,10 @@ import { Nav } from "@/components/nav";
 import { Footer } from "@/components/footer";
 import { Reveal } from "@/components/reveal";
 import { PulseLine } from "@/components/pulse-line";
-import { LogoMark } from "@/components/logo";
 import { FoundingForm } from "@/components/founding-form";
+import { Hero } from "@/components/hero";
+import { MethodTagList } from "@/components/method-tag-list";
+import { StepCard } from "@/components/step-card";
 import { publicAsset } from "@/lib/paths";
 
 const marqueeItems = [
@@ -74,62 +74,7 @@ export default function Home() {
     <>
       <Nav />
       <main id="main">
-        {/* ————————————————— hero ————————————————— */}
-        <section className="relative flex min-h-svh items-center overflow-hidden">
-          {/* warm ember glow, bottom left */}
-          <div
-            aria-hidden="true"
-            className="drift absolute -bottom-1/3 -left-1/4 h-[80vh] w-[80vh] rounded-full opacity-70"
-            style={{ background: "radial-gradient(circle, var(--glow) 0%, transparent 65%)" }}
-          />
-          {/* ghosted brand mark, right */}
-          <LogoMark
-            aria-hidden="true"
-            className="pointer-events-none absolute -right-[8%] top-1/2 hidden w-[58%] -translate-y-1/2 text-gold opacity-[0.05] lg:block"
-          />
-
-          <div className="relative mx-auto w-full max-w-7xl px-6 pt-32 pb-20 lg:px-10">
-            <Reveal>
-              <p className="eyebrow">Private Wellness Club — Addis Ababa</p>
-            </Reveal>
-
-            <h1 className="display mt-8 text-[17vw] leading-[0.92] sm:text-[13vw] lg:text-[9.5rem]">
-              <Reveal as="span" className="block" delay={80}>
-                Move.
-              </Reveal>
-              <Reveal as="span" className="block pl-[8vw] lg:pl-36" delay={220}>
-                Think.
-              </Reveal>
-              <Reveal as="span" className="block italic text-gold" delay={360}>
-                Recover.
-              </Reveal>
-            </h1>
-
-            <div className="mt-12">
-              <Reveal delay={480} className="max-w-md">
-                <p className="text-[17px] leading-relaxed text-muted">
-                  A club built around heat, cold, and stillness — saunas,
-                  ice baths, and space to reset in the heart of the city.
-                </p>
-                <div className="mt-8 flex flex-wrap items-center gap-4">
-                  <Link
-                    href="/book"
-                    className="group flex h-13 items-center gap-2.5 rounded-full bg-gold px-8 text-[14px] font-semibold tracking-[0.04em] text-bg transition-colors duration-300 hover:bg-gold-bright"
-                  >
-                    Book a Session
-                    <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
-                  </Link>
-                  <Link
-                    href="#method"
-                    className="flex h-13 items-center rounded-full border border-line px-8 text-[14px] font-medium text-ink transition-colors duration-300 hover:border-gold hover:text-gold"
-                  >
-                    The Method
-                  </Link>
-                </div>
-              </Reveal>
-            </div>
-          </div>
-        </section>
+        <Hero />
 
         {/* ————————————————— marquee ————————————————— */}
         <section aria-hidden="true" className="overflow-hidden border-y border-line-soft py-5">
@@ -167,16 +112,7 @@ export default function Home() {
                     <div>
                       <h3 className="font-serif text-4xl font-medium sm:text-5xl">{m.title}</h3>
                       <p className="mt-4 max-w-xl text-[16px] leading-relaxed text-muted">{m.copy}</p>
-                      <ul className="mt-5 flex flex-wrap gap-2.5">
-                        {m.tags.map((t) => (
-                          <li
-                            key={t}
-                            className="rounded-full border border-line-soft px-4 py-1.5 text-[12px] font-medium tracking-[0.08em] text-faint uppercase"
-                          >
-                            {t}
-                          </li>
-                        ))}
-                      </ul>
+                      <MethodTagList tags={m.tags} />
                     </div>
                   </article>
                 </Reveal>
@@ -247,15 +183,14 @@ export default function Home() {
                 <Reveal key={s.name} delay={i * 120}>
                   <Link
                     href="/book"
-                    className="group block overflow-hidden rounded-3xl border border-line-soft bg-raised transition-all duration-500 hover:border-line hover:shadow-(--shadow-warm)"
+                    className="card-shimmer group block overflow-hidden rounded-3xl border border-line-soft bg-raised transition-all duration-500 hover:border-line hover:shadow-(--shadow-warm)"
                   >
                     <div className="relative h-56 overflow-hidden">
-                      <Image
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
                         src={publicAsset("/facilities/sauna.jpg")}
                         alt="Cedar-lined sauna behind a full-height glass wall"
-                        fill
-                        sizes="(min-width: 1024px) 33vw, 100vw"
-                        className={`object-cover transition-transform duration-700 group-hover:scale-105 ${
+                        className={`absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105 ${
                           s.flip ? "-scale-x-100" : ""
                         }`}
                       />
@@ -301,15 +236,14 @@ export default function Home() {
               <Reveal delay={240}>
                 <Link
                   href="/book"
-                  className="group block overflow-hidden rounded-3xl border border-line-soft bg-raised transition-all duration-500 hover:border-line hover:shadow-(--shadow-warm)"
+                  className="card-shimmer group block overflow-hidden rounded-3xl border border-line-soft bg-raised transition-all duration-500 hover:border-line hover:shadow-(--shadow-warm)"
                 >
                   <div className="relative h-56 overflow-hidden">
-                    <Image
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
                       src={publicAsset("/facilities/ice-bath.jpg")}
                       alt="Wood-clad single-occupancy ice bath with steps"
-                      fill
-                      sizes="(min-width: 1024px) 33vw, 100vw"
-                      className="object-cover transition-transform duration-700 group-hover:scale-105"
+                      className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
                     />
                     <div className="absolute inset-0 dark:bg-[#0a0d12]/45" />
                     <div
@@ -375,13 +309,7 @@ export default function Home() {
           <div className="mt-14 grid gap-6 sm:grid-cols-3">
             {steps.map((s, i) => (
               <Reveal key={s.n} delay={i * 120}>
-                <div className="h-full rounded-2xl border border-line-soft bg-raised p-7">
-                  <span className="flex h-10 w-10 items-center justify-center rounded-full border border-line font-serif text-lg text-gold">
-                    {s.n}
-                  </span>
-                  <h3 className="mt-5 text-[16px] font-semibold">{s.title}</h3>
-                  <p className="mt-2.5 text-[14px] leading-relaxed text-muted">{s.copy}</p>
-                </div>
+                <StepCard n={s.n} title={s.title} copy={s.copy} />
               </Reveal>
             ))}
           </div>

@@ -2,8 +2,10 @@
 
 import { useMemo, useState } from "react";
 import { Check, Loader2, Save } from "lucide-react";
-import { FACILITIES, type FacilityId } from "@/lib/facilities";
+import { FACILITIES, slotsForDate, type FacilityId } from "@/lib/facilities";
 import type { BookingRecord, BookingStatus } from "@/lib/booking-store";
+import { DatePickerField } from "@/components/ui/date-picker-field";
+import { SelectField, type SelectOption } from "@/components/ui/select-field";
 
 const statuses: BookingStatus[] = [
   "confirmed",
@@ -32,13 +34,20 @@ function formatStatus(status: BookingStatus) {
     .join(" ");
 }
 
-function formatDate(date: string) {
-  return new Intl.DateTimeFormat("en-GB", {
-    weekday: "short",
-    day: "numeric",
-    month: "short",
-    timeZone: "UTC",
-  }).format(new Date(`${date}T12:00:00Z`));
+const statusOptions: SelectOption<BookingStatus>[] = statuses.map((status) => ({
+  value: status,
+  label: formatStatus(status),
+}));
+
+function timeOptions(facilityId: FacilityId, date: string, currentStart: string) {
+  const facility = FACILITIES[facilityId];
+  const starts = slotsForDate(facility, date);
+  const options = starts.includes(currentStart) ? starts : [currentStart, ...starts];
+
+  return options.map((start) => ({
+    value: start,
+    label: `${start} (${facility.duration} min)`,
+  }));
 }
 
 export function AdminBookingsTable({ bookings }: { bookings: BookingRecord[] }) {
@@ -162,22 +171,22 @@ export function AdminBookingsTable({ bookings }: { bookings: BookingRecord[] }) 
                     <p className="mt-1 text-[12px] text-muted">{facility?.temperature}</p>
                   </td>
                   <td className="px-4 py-4 align-top">
-                    <input
-                      type="date"
+                    <DatePickerField
                       value={draft.date}
-                      onChange={(event) => updateDraft(booking.id, { date: event.target.value })}
-                      className="h-10 rounded-lg border border-line-soft bg-bg px-3 text-[13px] outline-none focus:border-gold"
-                      aria-label={`Date for ${booking.code}`}
+                      onChange={(nextDate) => {
+                        if (nextDate) updateDraft(booking.id, { date: nextDate });
+                      }}
+                      className="w-36"
+                      ariaLabel={`Date for ${booking.code}`}
                     />
-                    <p className="mt-1 text-[12px] text-muted">{formatDate(draft.date)}</p>
                   </td>
                   <td className="px-4 py-4 align-top">
-                    <input
-                      type="time"
+                    <SelectField
                       value={draft.start}
-                      onChange={(event) => updateDraft(booking.id, { start: event.target.value })}
-                      className="h-10 rounded-lg border border-line-soft bg-bg px-3 text-[13px] outline-none focus:border-gold"
-                      aria-label={`Time for ${booking.code}`}
+                      options={timeOptions(booking.facility as FacilityId, draft.date, draft.start)}
+                      onChange={(start) => updateDraft(booking.id, { start })}
+                      className="w-36"
+                      ariaLabel={`Time for ${booking.code}`}
                     />
                   </td>
                   <td className="px-4 py-4 align-top">
@@ -194,20 +203,13 @@ export function AdminBookingsTable({ bookings }: { bookings: BookingRecord[] }) 
                     />
                   </td>
                   <td className="px-4 py-4 align-top">
-                    <select
+                    <SelectField
                       value={draft.status}
-                      onChange={(event) =>
-                        updateDraft(booking.id, { status: event.target.value as BookingStatus })
-                      }
-                      className="h-10 rounded-lg border border-line-soft bg-bg px-3 text-[13px] outline-none focus:border-gold"
-                      aria-label={`Status for ${booking.code}`}
-                    >
-                      {statuses.map((status) => (
-                        <option key={status} value={status}>
-                          {formatStatus(status)}
-                        </option>
-                      ))}
-                    </select>
+                      options={statusOptions}
+                      onChange={(status) => updateDraft(booking.id, { status })}
+                      className="w-36"
+                      ariaLabel={`Status for ${booking.code}`}
+                    />
                   </td>
                   <td className="px-4 py-4 align-top">
                     <textarea

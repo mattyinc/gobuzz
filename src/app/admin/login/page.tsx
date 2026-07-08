@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { LockKeyhole } from "lucide-react";
 import { AdminLoginForm } from "@/components/admin-login-form";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { isSupabaseAuthConfigured } from "@/lib/supabase/env";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -25,9 +26,12 @@ export default async function AdminLoginPage() {
   return (
     <main className="flex min-h-svh items-center justify-center px-6 py-16">
       <section className="w-full max-w-md rounded-2xl border border-line-soft bg-surface p-8 shadow-(--shadow-warm)">
-        <span className="flex h-11 w-11 items-center justify-center rounded-full bg-gold text-bg">
-          <LockKeyhole className="h-5 w-5" aria-hidden="true" />
-        </span>
+        <div className="flex items-center justify-between gap-4">
+          <span className="flex h-11 w-11 items-center justify-center rounded-full bg-gold text-bg">
+            <LockKeyhole className="h-5 w-5" aria-hidden="true" />
+          </span>
+          <ThemeToggle />
+        </div>
         <h1 className="mt-7 text-2xl font-semibold">Go&apos;Buzz admin</h1>
         <p className="mt-2 text-[15px] leading-relaxed text-muted">
           Sign in to view bookings, update session details, and manage guest status.

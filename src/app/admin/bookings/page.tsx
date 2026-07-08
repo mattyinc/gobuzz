@@ -2,8 +2,13 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { CalendarDays, Database, LockKeyhole } from "lucide-react";
+import {
+  AdminBookingsFilters,
+  normalizeStatus,
+} from "@/components/admin-bookings-filters";
 import { AdminBookingsTable } from "@/components/admin-bookings-table";
 import { AdminSignOut } from "@/components/admin-sign-out";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { bookingBackend, listBookings, type BookingStatus } from "@/lib/booking-store";
 import { isSupabaseAuthConfigured } from "@/lib/supabase/env";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -16,29 +21,6 @@ export const metadata: Metadata = {
 
 export const dynamic = "force-dynamic";
 
-const statusOptions = [
-  "all",
-  "confirmed",
-  "checked-in",
-  "completed",
-  "cancelled",
-  "no-show",
-] as const;
-
-type StatusFilter = (typeof statusOptions)[number];
-
-function normalizeStatus(value: string | undefined): StatusFilter {
-  return statusOptions.includes(value as StatusFilter) ? (value as StatusFilter) : "all";
-}
-
-function formatStatus(status: StatusFilter) {
-  if (status === "all") return "All";
-  return status
-    .split("-")
-    .map((part) => part[0].toUpperCase() + part.slice(1))
-    .join(" ");
-}
-
 export default async function AdminBookingsPage({
   searchParams,
 }: {
@@ -48,9 +30,12 @@ export default async function AdminBookingsPage({
     return (
       <main className="flex min-h-svh items-center justify-center px-6 py-16">
         <section className="w-full max-w-lg rounded-2xl border border-line-soft bg-surface p-8">
-          <span className="flex h-11 w-11 items-center justify-center rounded-full bg-gold text-bg">
-            <LockKeyhole className="h-5 w-5" aria-hidden="true" />
-          </span>
+          <div className="flex items-center justify-between gap-4">
+            <span className="flex h-11 w-11 items-center justify-center rounded-full bg-gold text-bg">
+              <LockKeyhole className="h-5 w-5" aria-hidden="true" />
+            </span>
+            <ThemeToggle />
+          </div>
           <h1 className="mt-7 text-2xl font-semibold">Admin needs Supabase Auth</h1>
           <p className="mt-3 text-[15px] leading-relaxed text-muted">
             Add the Supabase environment variables from <code className="text-ink">.env.example</code>{" "}
@@ -102,46 +87,13 @@ export default async function AdminBookingsPage({
               Storage: {bookingBackend()}
             </p>
           </div>
-          <AdminSignOut />
+          <div className="flex items-center gap-3">
+            <ThemeToggle />
+            <AdminSignOut />
+          </div>
         </header>
 
-        <form className="mt-6 flex flex-wrap items-end gap-4 rounded-xl border border-line-soft bg-surface p-4">
-          <div>
-            <label htmlFor="date" className="mb-2 block text-[12px] font-semibold text-muted">
-              Date <span className="font-normal text-faint">— empty shows all upcoming</span>
-            </label>
-            <input
-              id="date"
-              name="date"
-              type="date"
-              defaultValue={selectedDate ?? ""}
-              className="h-10 rounded-lg border border-line-soft bg-bg px-3 text-[14px] outline-none focus:border-gold"
-            />
-          </div>
-          <div>
-            <label htmlFor="status" className="mb-2 block text-[12px] font-semibold text-muted">
-              Status
-            </label>
-            <select
-              id="status"
-              name="status"
-              defaultValue={selectedStatus}
-              className="h-10 rounded-lg border border-line-soft bg-bg px-3 text-[14px] outline-none focus:border-gold"
-            >
-              {statusOptions.map((status) => (
-                <option key={status} value={status}>
-                  {formatStatus(status)}
-                </option>
-              ))}
-            </select>
-          </div>
-          <button
-            type="submit"
-            className="h-10 cursor-pointer rounded-full bg-gold px-5 text-[14px] font-semibold text-bg transition-colors hover:bg-gold-bright"
-          >
-            Filter
-          </button>
-        </form>
+        <AdminBookingsFilters selectedDate={selectedDate} selectedStatus={selectedStatus} />
 
         <section className="mt-6">
           <AdminBookingsTable bookings={bookings} />
