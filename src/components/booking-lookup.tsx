@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -83,7 +84,8 @@ function sessionPhase(booking: BookingResult): Phase {
 }
 
 export function BookingLookup() {
-  const [code, setCode] = useState("");
+  const searchParams = useSearchParams();
+  const [code, setCode] = useState(() => (searchParams.get("code") ?? "").toUpperCase());
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [booking, setBooking] = useState<BookingResult | null>(null);
@@ -125,14 +127,13 @@ export function BookingLookup() {
     }
   }, []);
 
-  // support /my-booking?code=GB-XXXXXX deep links (e.g. from the confirmation screen)
+  // support /my-booking?code=GB-XXXXXX deep links (e.g. from the confirmation screen);
+  // the initial fetch must flip the loading flag before its first await
   useEffect(() => {
-    const fromUrl = new URLSearchParams(window.location.search).get("code");
-    if (fromUrl) {
-      setCode(fromUrl.toUpperCase());
-      void lookup(fromUrl);
-    }
-  }, [lookup]);
+    const fromUrl = searchParams.get("code");
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (fromUrl) void lookup(fromUrl);
+  }, [searchParams, lookup]);
 
   const facility = booking ? FACILITIES[booking.facility] : null;
   const phase = booking ? sessionPhase(booking) : null;

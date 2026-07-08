@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { Nav } from "@/components/nav";
 import { Footer } from "@/components/footer";
 import { BookingLookup } from "@/components/booking-lookup";
@@ -25,7 +26,9 @@ export default function MyBookingPage() {
           </p>
         </div>
         <div className="mt-12">
-          <BookingLookup />
+          <Suspense fallback={null}>
+            <BookingLookup />
+          </Suspense>
         </div>
       </main>
       <Footer />
