@@ -76,6 +76,9 @@ export function Footer() {
             <Link href="/book" className="transition-colors hover:text-gold">
               Book a session
             </Link>
+            <Link href="/my-booking" className="transition-colors hover:text-gold">
+              Find my booking
+            </Link>
             <span className="tracking-[0.2em] uppercase">Move · Think · Recover</span>
           </div>
         </div>

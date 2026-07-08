@@ -9,6 +9,8 @@ import {
   type FacilityId,
 } from "@/lib/facilities";
 import { createBooking, SlotFullError } from "@/lib/booking-store";
+import { sendBookingConfirmation } from "@/lib/email";
+import { siteOrigin } from "@/lib/qr";
 
 type Body = {
   facility?: FacilityId;
@@ -66,7 +68,11 @@ export async function POST(request: NextRequest) {
       email: email.trim().toLowerCase(),
       phone: phone?.trim() || undefined,
     });
-    return NextResponse.json({ booking }, { status: 201 });
+    const { sent: emailSent } = await sendBookingConfirmation(
+      booking,
+      siteOrigin(request.nextUrl.origin)
+    );
+    return NextResponse.json({ booking, emailSent }, { status: 201 });
   } catch (err) {
     if (err instanceof SlotFullError) {
       return NextResponse.json(

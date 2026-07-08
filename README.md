@@ -27,10 +27,19 @@ For production, configure Supabase:
 
 When `SUPABASE_SERVICE_ROLE_KEY` is present, booking data uses Supabase. Without it, local development falls back to SQLite.
 
+### Confirmation emails
+
+Set `RESEND_API_KEY` (from [resend.com](https://resend.com)) to email each guest a
+branded confirmation with their booking code, a scannable QR (also attached as a
+PNG they can save to a wallet app), and an `.ics` calendar invite. Verify your
+sending domain in Resend and set `BOOKING_FROM_EMAIL`. Without the key, bookings
+still work — the email step is skipped.
+
 ## Pages
 
 - `/` — marketing site (hero, method, facilities, membership, contact)
 - `/book` — 3-step booking flow with live availability
+- `/my-booking` — client portal: look up a booking by code, live time-remaining
 - `/admin/login` — private admin login
 - `/admin/bookings` — private booking management
 
@@ -38,7 +47,8 @@ When `SUPABASE_SERVICE_ROLE_KEY` is present, booking data uses Supabase. Without
 
 - `GET /api/availability?facility=sauna-men|sauna-women|ice-bath&date=YYYY-MM-DD`
 - `POST /api/bookings` — `{ facility, date, start, spots, name, email, phone? }`
-- `GET /api/bookings/:code` — look up a booking (for the future client portal)
+- `GET /api/bookings/:code` — look up a booking (powers the client portal)
+- `GET /api/bookings/:code/qr` — QR code PNG linking to the client portal
 - `PATCH /api/admin/bookings/:id` — update admin-managed booking fields
 
 ## Where things live

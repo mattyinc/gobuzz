@@ -94,6 +94,7 @@ export function BookingFlow() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [booking, setBooking] = useState<Booking | null>(null);
+  const [emailSent, setEmailSent] = useState(false);
 
   const dates = useMemo(() => bookableDates(), []);
   const facility = facilityId ? FACILITIES[facilityId] : null;
@@ -172,6 +173,7 @@ export function BookingFlow() {
         return;
       }
       setBooking(data.booking);
+      setEmailSent(Boolean(data.emailSent));
     } catch {
       setError("Network error — please try again");
     } finally {
@@ -190,8 +192,9 @@ export function BookingFlow() {
           You&rsquo;re <em className="text-gold">booked.</em>
         </h1>
         <p className="mt-4 text-[16px] leading-relaxed text-muted">
-          A confirmation is on its way to {booking.email}. Show your code at the
-          front desk — and arrive ten minutes early.
+          {emailSent
+            ? `A confirmation with your QR code and calendar invite is on its way to ${booking.email}.`
+            : "Show your code at the front desk — and arrive ten minutes early."}
         </p>
 
         <div className="mt-10 overflow-hidden rounded-3xl border border-line-soft bg-surface text-left">
@@ -200,6 +203,17 @@ export function BookingFlow() {
               Booking code
             </p>
             <p className="mt-2 font-serif text-5xl tracking-[0.08em] text-gold">{booking.code}</p>
+            {/* eslint-disable-next-line @next/next/no-img-element -- dynamic API-generated image */}
+            <img
+              src={`/api/bookings/${booking.code}/qr`}
+              alt={`QR code for booking ${booking.code}`}
+              width={176}
+              height={176}
+              className="mx-auto mt-5 h-44 w-44 rounded-2xl border border-line-soft"
+            />
+            <p className="mt-3 text-[13px] text-faint">
+              Scan at the front desk — or save it to your phone.
+            </p>
           </div>
           <dl className="grid gap-x-6 gap-y-4 px-8 py-7 sm:grid-cols-2">
             <div>
@@ -230,6 +244,17 @@ export function BookingFlow() {
             </div>
           </dl>
         </div>
+
+        <p className="mt-6 text-[14px] text-muted">
+          Keep your code — you can check your session anytime on{" "}
+          <Link
+            href={`/my-booking?code=${booking.code}`}
+            className="font-semibold text-gold transition-colors hover:text-gold-bright"
+          >
+            My Booking
+          </Link>
+          .
+        </p>
 
         <PulseLine className="mx-auto mt-10 w-40 text-gold/60" />
 

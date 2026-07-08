@@ -77,11 +77,13 @@ export default async function AdminBookingsPage({
 
   const params = await searchParams;
   const dates = bookableDates();
-  const selectedDate = params.date && /^\d{4}-\d{2}-\d{2}$/.test(params.date) ? params.date : dates[0];
+  // no date picked = every upcoming booking in the window, not just today
+  const selectedDate =
+    params.date && /^\d{4}-\d{2}-\d{2}$/.test(params.date) ? params.date : null;
   const selectedStatus = normalizeStatus(params.status);
   const bookings = await listBookings({
-    from: selectedDate,
-    to: selectedDate,
+    from: selectedDate ?? dates[0],
+    to: selectedDate ?? dates[dates.length - 1],
     status: selectedStatus as BookingStatus | "all",
   });
 
@@ -106,13 +108,13 @@ export default async function AdminBookingsPage({
         <form className="mt-6 flex flex-wrap items-end gap-4 rounded-xl border border-line-soft bg-surface p-4">
           <div>
             <label htmlFor="date" className="mb-2 block text-[12px] font-semibold text-muted">
-              Date
+              Date <span className="font-normal text-faint">— empty shows all upcoming</span>
             </label>
             <input
               id="date"
               name="date"
               type="date"
-              defaultValue={selectedDate}
+              defaultValue={selectedDate ?? ""}
               className="h-10 rounded-lg border border-line-soft bg-bg px-3 text-[14px] outline-none focus:border-gold"
             />
           </div>
