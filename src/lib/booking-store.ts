@@ -4,6 +4,7 @@ import {
   getBookingByCode as getBookingByCodeSqlite,
   listBookings as listBookingsSqlite,
   updateBooking as updateBookingSqlite,
+  deleteBooking as deleteBookingSqlite,
   SlotFullError,
   type BookingRow as SqliteBookingRow,
   type BookingStatus,
@@ -173,4 +174,19 @@ export async function updateBooking(
 
   if (error) throw error;
   return (data ?? undefined) as BookingRecord | undefined;
+}
+
+export async function deleteBooking(id: string): Promise<boolean> {
+  if (!isSupabaseDataConfigured()) {
+    return deleteBookingSqlite(id);
+  }
+
+  const supabase = createSupabaseServiceClient();
+  const { error, count } = await supabase
+    .from("bookings")
+    .delete({ count: "exact" })
+    .eq("id", id);
+
+  if (error) throw error;
+  return (count ?? 0) > 0;
 }

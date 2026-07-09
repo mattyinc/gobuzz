@@ -212,3 +212,8 @@ export function updateBooking(
 
   return getDb().prepare(`SELECT * FROM bookings WHERE id = ?`).get(id) as BookingRow | undefined;
 }
+
+export function deleteBooking(id: string): boolean {
+  const result = getDb().prepare(`DELETE FROM bookings WHERE id = ?`).run(id);
+  return result.changes > 0;
+}

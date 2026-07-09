@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Check, Loader2, Save } from "lucide-react";
+import { Check, Loader2, Save, Trash2 } from "lucide-react";
 import { FACILITIES, slotsForDate, type FacilityId } from "@/lib/facilities";
 import type { BookingRecord, BookingStatus } from "@/lib/booking-store";
 import { DatePickerField } from "@/components/ui/date-picker-field";
@@ -57,6 +57,7 @@ export function AdminBookingsTable({ bookings }: { bookings: BookingRecord[] }) 
   );
   const [savingId, setSavingId] = useState<string | null>(null);
   const [savedId, setSavedId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const totals = useMemo(() => {
@@ -106,6 +107,28 @@ export function AdminBookingsTable({ bookings }: { bookings: BookingRecord[] }) 
       [id]: toDraft(data.booking),
     }));
     setSavedId(id);
+  }
+
+  async function remove(id: string, code: string) {
+    if (!window.confirm(`Delete booking ${code}? This cannot be undone.`)) return;
+
+    setDeletingId(id);
+    setError(null);
+
+    const response = await fetch(`/api/admin/bookings/${id}`, { method: "DELETE" });
+    setDeletingId(null);
+
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({}));
+      setError(data.error ?? "Could not delete booking");
+      return;
+    }
+
+    setRows((current) => current.filter((booking) => booking.id !== id));
+    setDrafts((current) => {
+      const { [id]: _removed, ...rest } = current;
+      return rest;
+    });
   }
 
   return (
@@ -216,27 +239,42 @@ export function AdminBookingsTable({ bookings }: { bookings: BookingRecord[] }) 
                       value={draft.notes ?? ""}
                       onChange={(event) => updateDraft(booking.id, { notes: event.target.value })}
                       rows={2}
-                      className="w-56 rounded-lg border border-line-soft bg-bg px-3 py-2 text-[13px] outline-none focus:border-gold"
+                      className="w-44 rounded-lg border border-line-soft bg-bg px-3 py-2 text-[13px] outline-none focus:border-gold"
                       placeholder="Internal note"
                       aria-label={`Notes for ${booking.code}`}
                     />
                   </td>
                   <td className="px-4 py-4 align-top">
-                    <button
-                      type="button"
-                      onClick={() => save(booking.id)}
-                      disabled={savingId === booking.id}
-                      className="flex h-10 cursor-pointer items-center justify-center gap-2 rounded-full bg-gold px-4 text-[13px] font-semibold text-bg transition-colors hover:bg-gold-bright disabled:cursor-not-allowed disabled:opacity-60"
-                    >
-                      {savingId === booking.id ? (
-                        <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-                      ) : savedId === booking.id ? (
-                        <Check className="h-4 w-4" aria-hidden="true" />
-                      ) : (
-                        <Save className="h-4 w-4" aria-hidden="true" />
-                      )}
-                      {savedId === booking.id ? "Saved" : "Save"}
-                    </button>
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={() => save(booking.id)}
+                        disabled={savingId === booking.id || deletingId === booking.id}
+                        className="flex h-10 cursor-pointer items-center justify-center gap-2 rounded-full bg-gold px-4 text-[13px] font-semibold text-bg transition-colors hover:bg-gold-bright disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        {savingId === booking.id ? (
+                          <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                        ) : savedId === booking.id ? (
+                          <Check className="h-4 w-4" aria-hidden="true" />
+                        ) : (
+                          <Save className="h-4 w-4" aria-hidden="true" />
+                        )}
+                        {savedId === booking.id ? "Saved" : "Save"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => remove(booking.id, booking.code)}
+                        disabled={deletingId === booking.id || savingId === booking.id}
+                        className="flex h-10 cursor-pointer items-center justify-center gap-2 rounded-full border border-red-500/40 px-4 text-[13px] font-semibold text-red-600 transition-colors hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-60 dark:text-red-300"
+                      >
+                        {deletingId === booking.id ? (
+                          <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                        ) : (
+                          <Trash2 className="h-4 w-4" aria-hidden="true" />
+                        )}
+                        Delete
+                      </button>
+                    </div>
                   </td>
                 </tr>
               );

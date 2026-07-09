@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { updateBooking, type BookingStatus } from "@/lib/booking-store";
+import { updateBooking, deleteBooking, type BookingStatus } from "@/lib/booking-store";
 import { isSupabaseAuthConfigured } from "@/lib/supabase/env";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -80,5 +80,37 @@ export async function PATCH(
   } catch (error) {
     console.error("admin booking update failed", error);
     return NextResponse.json({ error: "Could not update booking" }, { status: 500 });
+  }
+}
+
+export async function DELETE(
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  if (!isSupabaseAuthConfigured()) {
+    return NextResponse.json({ error: "Supabase auth is not configured" }, { status: 503 });
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { id } = await params;
+
+  try {
+    const deleted = await deleteBooking(id);
+    if (!deleted) {
+      return NextResponse.json({ error: "Booking not found" }, { status: 404 });
+    }
+
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    console.error("admin booking delete failed", error);
+    return NextResponse.json({ error: "Could not delete booking" }, { status: 500 });
   }
 }

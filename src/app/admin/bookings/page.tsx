@@ -72,7 +72,7 @@ export default async function AdminBookingsPage({
 
   return (
     <main className="min-h-svh bg-bg px-5 py-6 text-ink lg:px-8">
-      <div className="mx-auto max-w-7xl">
+      <div className="mx-auto max-w-[1800px]">
         <header className="flex flex-wrap items-center justify-between gap-4 border-b border-line-soft pb-5">
           <div>
             <p className="flex items-center gap-2 text-[12px] font-semibold text-gold">
