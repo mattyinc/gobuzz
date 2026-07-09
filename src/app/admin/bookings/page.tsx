@@ -2,10 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { CalendarDays, Database, LockKeyhole } from "lucide-react";
-import {
-  AdminBookingsFilters,
-  normalizeStatus,
-} from "@/components/admin-bookings-filters";
+import { AdminBookingsFilters } from "@/components/admin-bookings-filters";
+import { normalizeStatus } from "@/lib/booking-status";
 import { AdminBookingsTable } from "@/components/admin-bookings-table";
 import { AdminSignOut } from "@/components/admin-sign-out";
 import { ThemeToggle } from "@/components/theme-toggle";

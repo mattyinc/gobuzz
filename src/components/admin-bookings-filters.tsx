@@ -5,34 +5,9 @@ import { useState, useTransition } from "react";
 import { Loader2 } from "lucide-react";
 import { DatePickerField } from "@/components/ui/date-picker-field";
 import { SelectField, type SelectOption } from "@/components/ui/select-field";
+import { statusFilterOptions, type StatusFilter } from "@/lib/booking-status";
 
-const statusOptions = [
-  "all",
-  "confirmed",
-  "checked-in",
-  "completed",
-  "cancelled",
-  "no-show",
-] as const;
-
-export type StatusFilter = (typeof statusOptions)[number];
-
-export function formatStatus(status: StatusFilter) {
-  if (status === "all") return "All";
-  return status
-    .split("-")
-    .map((part) => part[0].toUpperCase() + part.slice(1))
-    .join(" ");
-}
-
-export function normalizeStatus(value: string | undefined): StatusFilter {
-  return statusOptions.includes(value as StatusFilter) ? (value as StatusFilter) : "all";
-}
-
-const options: SelectOption<StatusFilter>[] = statusOptions.map((status) => ({
-  value: status,
-  label: formatStatus(status),
-}));
+const options: SelectOption<StatusFilter>[] = statusFilterOptions;
 
 export function AdminBookingsFilters({
   selectedDate,
