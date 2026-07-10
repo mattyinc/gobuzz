@@ -4,6 +4,7 @@ import fs from "node:fs";
 
 import {
   FACILITIES,
+  FACILITY_IDS,
   type FacilityId,
 } from "./facilities";
 
@@ -216,4 +217,116 @@ export function updateBooking(
 export function deleteBooking(id: string): boolean {
   const result = getDb().prepare(`DELETE FROM bookings WHERE id = ?`).run(id);
   return result.changes > 0;
+}
+
+/** Active statuses that count toward capacity / "happening" totals. */
+const ACTIVE_STATUSES = ["confirmed", "checked-in"] as const;
+
+export type FacilityCounts = Record<FacilityId, number>;
+
+function zeroFacilityCounts(): FacilityCounts {
+  return Object.fromEntries(FACILITY_IDS.map((id) => [id, 0])) as FacilityCounts;
+}
+
+const BOOKING_STATUSES: BookingStatus[] = [
+  "confirmed",
+  "checked-in",
+  "completed",
+  "cancelled",
+  "no-show",
+];
+
+export type DashboardStats = {
+  /** Snapshot for a single day. */
+  today: {
+    /** number of bookings (rows), by facility */
+    byFacility: FacilityCounts;
+    total: number;
+    /** spots booked (for occupancy), by facility */
+    spotsByFacility: FacilityCounts;
+  };
+  /** Snapshot across [date, throughDate] inclusive. */
+  upcoming: {
+    byFacility: FacilityCounts;
+    total: number;
+  };
+  /** Status counts across [date, throughDate] inclusive. */
+  statusBreakdown: Record<BookingStatus, number>;
+  /** All active bookings for `date`, ordered by start time, for a "next up" list. */
+  todaySessions: BookingRow[];
+};
+
+/**
+ * Read-only aggregate stats for the admin dashboard. `date` is the day to
+ * treat as "today" (YYYY-MM-DD, Addis time); `throughDate` bounds the
+ * "upcoming" window (inclusive), e.g. today + 6 days for a 7-day view.
+ */
+export function getDashboardStats(date: string, throughDate: string): DashboardStats {
+  const d = getDb();
+  const activePlaceholders = ACTIVE_STATUSES.map(() => "?").join(", ");
+
+  const todayRows = d
+    .prepare(
+      `SELECT facility, COUNT(*) AS bookings, COALESCE(SUM(spots), 0) AS spots
+       FROM bookings
+       WHERE date = ? AND status IN (${activePlaceholders})
+       GROUP BY facility`
+    )
+    .all(date, ...ACTIVE_STATUSES) as { facility: FacilityId; bookings: number; spots: number }[];
+
+  const todayByFacility = zeroFacilityCounts();
+  const todaySpotsByFacility = zeroFacilityCounts();
+  let todayTotal = 0;
+  for (const row of todayRows) {
+    todayByFacility[row.facility] = row.bookings;
+    todaySpotsByFacility[row.facility] = row.spots;
+    todayTotal += row.bookings;
+  }
+
+  const upcomingRows = d
+    .prepare(
+      `SELECT facility, COUNT(*) AS bookings
+       FROM bookings
+       WHERE date >= ? AND date <= ? AND status IN (${activePlaceholders})
+       GROUP BY facility`
+    )
+    .all(date, throughDate, ...ACTIVE_STATUSES) as { facility: FacilityId; bookings: number }[];
+
+  const upcomingByFacility = zeroFacilityCounts();
+  let upcomingTotal = 0;
+  for (const row of upcomingRows) {
+    upcomingByFacility[row.facility] = row.bookings;
+    upcomingTotal += row.bookings;
+  }
+
+  const statusRows = d
+    .prepare(
+      `SELECT status, COUNT(*) AS count
+       FROM bookings
+       WHERE date >= ? AND date <= ?
+       GROUP BY status`
+    )
+    .all(date, throughDate) as { status: BookingStatus; count: number }[];
+
+  const statusBreakdown = Object.fromEntries(
+    BOOKING_STATUSES.map((status) => [status, 0])
+  ) as Record<BookingStatus, number>;
+  for (const row of statusRows) {
+    statusBreakdown[row.status] = row.count;
+  }
+
+  const todaySessions = d
+    .prepare(
+      `SELECT * FROM bookings
+       WHERE date = ? AND status IN (${activePlaceholders})
+       ORDER BY start ASC, created_at ASC`
+    )
+    .all(date, ...ACTIVE_STATUSES) as BookingRow[];
+
+  return {
+    today: { byFacility: todayByFacility, total: todayTotal, spotsByFacility: todaySpotsByFacility },
+    upcoming: { byFacility: upcomingByFacility, total: upcomingTotal },
+    statusBreakdown,
+    todaySessions,
+  };
 }
