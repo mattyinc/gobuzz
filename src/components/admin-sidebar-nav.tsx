@@ -15,7 +15,7 @@ export function AdminSidebarNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="flex gap-1 overflow-x-auto lg:flex-col lg:gap-1.5 lg:overflow-visible">
+    <nav aria-label="Admin navigation" className="flex gap-1 overflow-x-auto lg:flex-col lg:gap-1.5 lg:overflow-visible">
       {links.map(({ href, label, icon: Icon, exact }) => {
         const isActive = exact ? pathname === href : pathname.startsWith(href);
 
@@ -25,10 +25,10 @@ export function AdminSidebarNav() {
             href={href}
             aria-current={isActive ? "page" : undefined}
             className={cn(
-              "flex shrink-0 items-center gap-2.5 rounded-xl px-3.5 py-2.5 text-[14px] font-medium transition-colors",
+              "flex h-10 shrink-0 items-center gap-2.5 rounded-lg px-3 text-[13px] font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#d7b95d]",
               isActive
-                ? "bg-gold text-bg"
-                : "text-muted hover:bg-raised hover:text-ink"
+                ? "bg-[#d2b45a] text-[#17150f]"
+                : "text-[#b9b09d] hover:bg-white/7 hover:text-[#fffaf0]"
             )}
           >
             <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />

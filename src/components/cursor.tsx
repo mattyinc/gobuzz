@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { usePathname } from "next/navigation";
 
 const INTERACTIVE = 'a, button, [role="button"], label, select, input, textarea';
 
@@ -13,8 +14,14 @@ const INTERACTIVE = 'a, button, [role="button"], label, select, input, textarea'
 export function Cursor() {
   const outerRef = useRef<HTMLDivElement>(null);
   const innerRef = useRef<HTMLDivElement>(null);
+  const pathname = usePathname();
+  const disabled = pathname.startsWith("/admin");
 
   useEffect(() => {
+    if (disabled) {
+      document.documentElement.classList.remove("has-cursor");
+      return;
+    }
     if (!window.matchMedia("(pointer: fine)").matches) return;
 
     document.documentElement.classList.add("has-cursor");
@@ -49,7 +56,9 @@ export function Cursor() {
       document.removeEventListener("mouseout", onOut);
       document.documentElement.classList.remove("has-cursor");
     };
-  }, []);
+  }, [disabled]);
+
+  if (disabled) return null;
 
   return (
     <div

@@ -1,11 +1,25 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Check, Loader2, Save, Trash2 } from "lucide-react";
-import { FACILITIES, slotsForDate, type FacilityId } from "@/lib/facilities";
-import type { BookingRecord, BookingStatus } from "@/lib/booking-store";
+import {
+  Check,
+  ChevronDown,
+  Clock3,
+  Loader2,
+  Mail,
+  Pencil,
+  Phone,
+  Save,
+  Trash2,
+  Users,
+} from "lucide-react";
+import { BookingStatusBadge } from "@/components/booking-status-badge";
 import { DatePickerField } from "@/components/ui/date-picker-field";
 import { SelectField, type SelectOption } from "@/components/ui/select-field";
+import { formatStatus } from "@/lib/booking-status";
+import { FACILITIES, slotsForDate, type FacilityId } from "@/lib/facilities";
+import type { BookingRecord, BookingStatus } from "@/lib/booking-store";
+import { cn } from "@/lib/utils";
 
 const statuses: BookingStatus[] = [
   "confirmed",
@@ -25,13 +39,6 @@ function toDraft(booking: BookingRecord): Draft {
     status: booking.status,
     notes: booking.notes ?? "",
   };
-}
-
-function formatStatus(status: BookingStatus) {
-  return status
-    .split("-")
-    .map((part) => part[0].toUpperCase() + part.slice(1))
-    .join(" ");
 }
 
 const statusOptions: SelectOption<BookingStatus>[] = statuses.map((status) => ({
@@ -55,6 +62,7 @@ export function AdminBookingsTable({ bookings }: { bookings: BookingRecord[] }) 
   const [drafts, setDrafts] = useState<Record<string, Draft>>(() =>
     Object.fromEntries(bookings.map((booking) => [booking.id, toDraft(booking)]))
   );
+  const [expandedId, setExpandedId] = useState<string | null>(null);
   const [savingId, setSavingId] = useState<string | null>(null);
   const [savedId, setSavedId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -65,7 +73,7 @@ export function AdminBookingsTable({ bookings }: { bookings: BookingRecord[] }) 
     return {
       bookings: rows.length,
       spots: active.reduce((sum, booking) => sum + booking.spots, 0),
-      active: active.length,
+      checkedIn: rows.filter((booking) => booking.status === "checked-in").length,
     };
   }, [rows]);
 
@@ -78,6 +86,10 @@ export function AdminBookingsTable({ bookings }: { bookings: BookingRecord[] }) 
       },
     }));
     setSavedId(null);
+  }
+
+  function isDirty(booking: BookingRecord) {
+    return JSON.stringify(drafts[booking.id]) !== JSON.stringify(toDraft(booking));
   }
 
   async function save(id: string) {
@@ -126,162 +138,218 @@ export function AdminBookingsTable({ bookings }: { bookings: BookingRecord[] }) 
 
     setRows((current) => current.filter((booking) => booking.id !== id));
     setDrafts((current) => {
-      const { [id]: _removed, ...rest } = current;
-      return rest;
+      const next = { ...current };
+      delete next[id];
+      return next;
     });
+    setExpandedId(null);
   }
 
   return (
-    <div className="grid gap-5">
-      <div className="grid gap-3 sm:grid-cols-3">
-        <div className="rounded-xl border border-line-soft bg-surface px-5 py-4">
-          <p className="text-[12px] font-semibold text-faint">Bookings</p>
-          <p className="mt-1 text-2xl font-semibold">{totals.bookings}</p>
+    <div>
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h2 className="text-[17px] font-semibold">Booking ledger</h2>
+          <p className="mt-1 text-[12px] text-muted">
+            {totals.bookings} {totals.bookings === 1 ? "booking" : "bookings"} in this view
+          </p>
         </div>
-        <div className="rounded-xl border border-line-soft bg-surface px-5 py-4">
-          <p className="text-[12px] font-semibold text-faint">Active sessions</p>
-          <p className="mt-1 text-2xl font-semibold">{totals.active}</p>
-        </div>
-        <div className="rounded-xl border border-line-soft bg-surface px-5 py-4">
-          <p className="text-[12px] font-semibold text-faint">Active spots</p>
-          <p className="mt-1 text-2xl font-semibold">{totals.spots}</p>
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-muted">
+          <span className="flex items-center gap-1.5"><Users className="h-3.5 w-3.5 text-gold" aria-hidden="true" />{totals.spots} active spots</span>
+          <span className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-emerald-600" aria-hidden="true" />{totals.checkedIn} checked in</span>
         </div>
       </div>
 
       {error && (
-        <p className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-[14px] text-red-700 dark:text-red-200">
-          {error}
-        </p>
+        <div role="alert" className="mb-4 flex items-start justify-between gap-4 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-[13px] text-red-700 dark:text-red-200">
+          <span>{error}</span>
+          <button type="button" onClick={() => setError(null)} className="font-semibold underline underline-offset-2">Dismiss</button>
+        </div>
       )}
 
-      <div className="overflow-x-auto rounded-xl border border-line-soft bg-surface">
-        <table className="min-w-[1040px] w-full border-collapse text-left text-[14px]">
-          <thead className="bg-raised text-[12px] text-faint">
-            <tr>
-              <th className="border-b border-line-soft px-4 py-3 font-semibold">Guest</th>
-              <th className="border-b border-line-soft px-4 py-3 font-semibold">Experience</th>
-              <th className="border-b border-line-soft px-4 py-3 font-semibold">Date</th>
-              <th className="border-b border-line-soft px-4 py-3 font-semibold">Time</th>
-              <th className="border-b border-line-soft px-4 py-3 font-semibold">Spots</th>
-              <th className="border-b border-line-soft px-4 py-3 font-semibold">Status</th>
-              <th className="border-b border-line-soft px-4 py-3 font-semibold">Notes</th>
-              <th className="border-b border-line-soft px-4 py-3 font-semibold">Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.length === 0 && (
-              <tr>
-                <td colSpan={8} className="px-4 py-12 text-center text-muted">
-                  No bookings match this view.
-                </td>
-              </tr>
-            )}
+      <div className="overflow-hidden rounded-xl border border-line-soft bg-surface">
+        <div className="hidden grid-cols-[minmax(190px,1.2fr)_minmax(210px,1fr)_100px_124px_40px] gap-4 border-b border-line-soft bg-raised px-4 py-3 text-[10px] font-semibold text-faint md:grid">
+          <span>Guest</span>
+          <span>Session</span>
+          <span>Spots</span>
+          <span>Status</span>
+          <span className="sr-only">Actions</span>
+        </div>
 
-            {rows.map((booking) => {
-              const draft = drafts[booking.id];
-              const facility = FACILITIES[booking.facility as FacilityId];
+        {rows.length === 0 && (
+          <div className="px-5 py-14 text-center">
+            <SearchEmptyIcon />
+            <p className="mt-4 text-[14px] font-semibold">No bookings found</p>
+            <p className="mt-1 text-[12px] text-muted">Try clearing a filter or searching with a booking code.</p>
+          </div>
+        )}
 
-              return (
-                <tr key={booking.id} className="border-b border-line-soft last:border-b-0">
-                  <td className="px-4 py-4 align-top">
-                    <p className="font-semibold">{booking.name}</p>
-                    <p className="mt-1 text-[12px] text-muted">{booking.email}</p>
-                    {booking.phone && <p className="mt-1 text-[12px] text-muted">{booking.phone}</p>}
-                    <p className="mt-2 font-mono text-[12px] text-gold">{booking.code}</p>
-                  </td>
-                  <td className="px-4 py-4 align-top">
-                    <p className="font-medium">{facility?.name ?? booking.facility}</p>
-                    <p className="mt-1 text-[12px] text-muted">{facility?.temperature}</p>
-                  </td>
-                  <td className="px-4 py-4 align-top">
+        {rows.map((booking) => {
+          const draft = drafts[booking.id];
+          const facility = FACILITIES[booking.facility];
+          const expanded = expandedId === booking.id;
+          const dirty = isDirty(booking);
+
+          return (
+            <article key={booking.id} className="border-b border-line-soft last:border-b-0">
+              <div className="grid gap-4 px-4 py-4 md:grid-cols-[minmax(190px,1.2fr)_minmax(210px,1fr)_100px_124px_40px] md:items-center">
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="truncate text-[13px] font-semibold">{booking.name}</p>
+                    <span className="font-mono text-[10px] font-semibold text-gold">{booking.code}</span>
+                  </div>
+                  <div className="mt-1.5 flex min-w-0 items-center gap-3 text-[11px] text-muted">
+                    <span className="flex min-w-0 items-center gap-1.5 truncate"><Mail className="h-3 w-3 shrink-0" aria-hidden="true" />{booking.email}</span>
+                    {booking.phone && <span className="hidden items-center gap-1.5 lg:flex"><Phone className="h-3 w-3" aria-hidden="true" />{booking.phone}</span>}
+                  </div>
+                </div>
+
+                <div>
+                  <p className="text-[13px] font-medium">{facility.name}</p>
+                  <p className="mt-1 flex items-center gap-1.5 text-[11px] text-muted">
+                    <Clock3 className="h-3 w-3" aria-hidden="true" />
+                    {formatDate(booking.date)} at <span className="font-semibold tabular-nums text-ink">{booking.start}</span>
+                  </p>
+                </div>
+
+                <div className="flex items-center justify-between md:block">
+                  <span className="text-[11px] text-faint md:hidden">Spots</span>
+                  <span className="text-[13px] font-semibold tabular-nums">{booking.spots} / {facility.capacity}</span>
+                </div>
+
+                <div className="flex items-center justify-between gap-3 md:block">
+                  <span className="text-[11px] text-faint md:hidden">Status</span>
+                  <BookingStatusBadge status={booking.status} />
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setExpandedId(expanded ? null : booking.id);
+                    setSavedId(null);
+                  }}
+                  aria-expanded={expanded}
+                  aria-label={expanded ? `Close ${booking.code}` : `Edit ${booking.code}`}
+                  title={expanded ? "Close editor" : "Edit booking"}
+                  className={cn(
+                    "flex h-9 w-9 items-center justify-center justify-self-end rounded-full border transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold",
+                    expanded ? "border-gold bg-gold text-bg" : "border-line-soft text-muted hover:border-gold hover:text-gold"
+                  )}
+                >
+                  {expanded ? <ChevronDown className="h-4 w-4 rotate-180" aria-hidden="true" /> : <Pencil className="h-3.5 w-3.5" aria-hidden="true" />}
+                </button>
+              </div>
+
+              {expanded && (
+                <div className="border-t border-line-soft bg-raised px-4 py-5 sm:px-5">
+                  <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <p className="text-[13px] font-semibold">Edit {booking.code}</p>
+                      <p className="mt-0.5 text-[11px] text-muted">Changes stay private until you save.</p>
+                    </div>
+                    {dirty && <span className="rounded-full bg-gold/12 px-2.5 py-1 text-[10px] font-semibold text-gold">Unsaved changes</span>}
+                  </div>
+
+                  <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-[minmax(170px,0.9fr)_minmax(170px,0.9fr)_100px_minmax(160px,0.9fr)_minmax(220px,1.4fr)]">
                     <DatePickerField
+                      label="Date"
                       value={draft.date}
                       onChange={(nextDate) => {
                         if (nextDate) updateDraft(booking.id, { date: nextDate });
                       }}
-                      className="w-36"
+                      className="w-full"
+                      buttonClassName="bg-surface"
                       ariaLabel={`Date for ${booking.code}`}
                     />
-                  </td>
-                  <td className="px-4 py-4 align-top">
                     <SelectField
+                      label="Start time"
                       value={draft.start}
-                      options={timeOptions(booking.facility as FacilityId, draft.date, draft.start)}
+                      options={timeOptions(booking.facility, draft.date, draft.start)}
                       onChange={(start) => updateDraft(booking.id, { start })}
-                      className="w-36"
+                      className="w-full"
+                      triggerClassName="bg-surface"
                       ariaLabel={`Time for ${booking.code}`}
                     />
-                  </td>
-                  <td className="px-4 py-4 align-top">
-                    <input
-                      type="number"
-                      min={1}
-                      max={facility?.capacity ?? 8}
-                      value={draft.spots}
-                      onChange={(event) =>
-                        updateDraft(booking.id, { spots: Number(event.target.value) })
-                      }
-                      className="h-10 w-20 rounded-lg border border-line-soft bg-bg px-3 text-[13px] outline-none focus:border-gold"
-                      aria-label={`Spots for ${booking.code}`}
-                    />
-                  </td>
-                  <td className="px-4 py-4 align-top">
+                    <label className="block">
+                      <span className="mb-2 block text-[12px] font-semibold text-muted">Spots</span>
+                      <input
+                        type="number"
+                        min={1}
+                        max={facility.capacity}
+                        value={draft.spots}
+                        onChange={(event) => updateDraft(booking.id, { spots: Number(event.target.value) })}
+                        className="h-10 w-full rounded-xl border border-line-soft bg-surface px-3 text-[13px] font-medium outline-none transition-colors focus:border-gold focus:ring-2 focus:ring-gold/20"
+                        aria-label={`Spots for ${booking.code}`}
+                      />
+                    </label>
                     <SelectField
+                      label="Status"
                       value={draft.status}
                       options={statusOptions}
                       onChange={(status) => updateDraft(booking.id, { status })}
-                      className="w-36"
+                      className="w-full"
+                      triggerClassName="bg-surface"
                       ariaLabel={`Status for ${booking.code}`}
                     />
-                  </td>
-                  <td className="px-4 py-4 align-top">
-                    <textarea
-                      value={draft.notes ?? ""}
-                      onChange={(event) => updateDraft(booking.id, { notes: event.target.value })}
-                      rows={2}
-                      className="w-44 rounded-lg border border-line-soft bg-bg px-3 py-2 text-[13px] outline-none focus:border-gold"
-                      placeholder="Internal note"
-                      aria-label={`Notes for ${booking.code}`}
-                    />
-                  </td>
-                  <td className="px-4 py-4 align-top">
-                    <div className="flex flex-wrap gap-2">
+                    <label className="block sm:col-span-2 xl:col-span-1">
+                      <span className="mb-2 block text-[12px] font-semibold text-muted">Internal note</span>
+                      <input
+                        type="text"
+                        value={draft.notes ?? ""}
+                        onChange={(event) => updateDraft(booking.id, { notes: event.target.value })}
+                        className="h-10 w-full rounded-xl border border-line-soft bg-surface px-3 text-[13px] outline-none transition-colors placeholder:text-faint focus:border-gold focus:ring-2 focus:ring-gold/20"
+                        placeholder="Add a note for the team"
+                        aria-label={`Notes for ${booking.code}`}
+                      />
+                    </label>
+                  </div>
+
+                  <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-line-soft pt-4">
+                    <button
+                      type="button"
+                      onClick={() => remove(booking.id, booking.code)}
+                      disabled={deletingId === booking.id || savingId === booking.id}
+                      className="flex h-9 items-center gap-2 rounded-full px-2 text-[12px] font-semibold text-red-600 transition-colors hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-60 dark:text-red-300"
+                    >
+                      {deletingId === booking.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" /> : <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />}
+                      Delete booking
+                    </button>
+                    <div className="flex items-center gap-3">
+                      {savedId === booking.id && <span className="flex items-center gap-1.5 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300"><Check className="h-3.5 w-3.5" aria-hidden="true" />Saved</span>}
                       <button
                         type="button"
                         onClick={() => save(booking.id)}
-                        disabled={savingId === booking.id || deletingId === booking.id}
-                        className="flex h-10 cursor-pointer items-center justify-center gap-2 rounded-full bg-gold px-4 text-[13px] font-semibold text-bg transition-colors hover:bg-gold-bright disabled:cursor-not-allowed disabled:opacity-60"
+                        disabled={!dirty || savingId === booking.id || deletingId === booking.id}
+                        className="flex h-10 items-center justify-center gap-2 rounded-full bg-gold px-5 text-[13px] font-semibold text-bg transition-colors hover:bg-gold-bright focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold disabled:cursor-not-allowed disabled:opacity-45"
                       >
-                        {savingId === booking.id ? (
-                          <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-                        ) : savedId === booking.id ? (
-                          <Check className="h-4 w-4" aria-hidden="true" />
-                        ) : (
-                          <Save className="h-4 w-4" aria-hidden="true" />
-                        )}
-                        {savedId === booking.id ? "Saved" : "Save"}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => remove(booking.id, booking.code)}
-                        disabled={deletingId === booking.id || savingId === booking.id}
-                        className="flex h-10 cursor-pointer items-center justify-center gap-2 rounded-full border border-red-500/40 px-4 text-[13px] font-semibold text-red-600 transition-colors hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-60 dark:text-red-300"
-                      >
-                        {deletingId === booking.id ? (
-                          <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-                        ) : (
-                          <Trash2 className="h-4 w-4" aria-hidden="true" />
-                        )}
-                        Delete
+                        {savingId === booking.id ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : <Save className="h-4 w-4" aria-hidden="true" />}
+                        Save changes
                       </button>
                     </div>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+                  </div>
+                </div>
+              )}
+            </article>
+          );
+        })}
       </div>
     </div>
+  );
+}
+
+function formatDate(date: string) {
+  return new Intl.DateTimeFormat("en-GB", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    timeZone: "UTC",
+  }).format(new Date(`${date}T12:00:00Z`));
+}
+
+function SearchEmptyIcon() {
+  return (
+    <span className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-gold/10 text-gold">
+      <Users className="h-4 w-4" aria-hidden="true" />
+    </span>
   );
 }

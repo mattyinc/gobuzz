@@ -41,6 +41,7 @@ export default function RootLayout({
     <html
       lang="en"
       className={`${mackinac.variable} ${manrope.variable} dark h-full`}
+      data-scroll-behavior="smooth"
       suppressHydrationWarning
     >
       <head>
