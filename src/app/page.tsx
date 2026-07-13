@@ -132,24 +132,36 @@ export default function Home() {
                 </h2>
               </Reveal>
               <Reveal delay={150} className="lg:border-l lg:border-line-soft lg:pl-16">
-                <p className="font-serif text-[26px] leading-[1.45] sm:text-[30px]">
-                  I grew up in Ethiopia and rebuilt myself in Australia. Through
-                  fitness training, psychology, and years of working at the
-                  intersection of physical and mental health, I came to understand
-                  something simple: wellness is not a product. It is a practice.
-                  I am bringing that practice home — to Addis Ababa — for the
-                  first time.
-                </p>
-                <p className="mt-7 font-serif text-[26px] leading-[1.45] sm:text-[30px]">
-                  Go&rsquo;buzz is not entering a market.{" "}
-                  <em className="text-gold">It is creating one.</em>
-                </p>
-                <div className="mt-10 flex items-center gap-5">
-                  <PulseLine className="w-20 text-gold" />
-                  <p className="text-[12px] font-semibold tracking-[0.22em] text-muted uppercase">
-                    Mack — Founder
-                  </p>
-                </div>
+                <figure className="border-t border-line-soft pt-7 sm:pt-8 lg:border-t-0 lg:pt-0">
+                  <span
+                    aria-hidden="true"
+                    className="block h-12 font-serif text-[72px] leading-none text-gold/80 sm:h-14 sm:text-[84px]"
+                  >
+                    &ldquo;
+                  </span>
+                  <blockquote className="max-w-[38rem] text-pretty font-serif text-[20px] leading-[1.6] sm:text-[23px] sm:leading-[1.58]">
+                    <p>
+                      I grew up in Ethiopia and rebuilt myself in Australia. Through
+                      fitness training, psychology, and years of working at the
+                      intersection of physical and mental health, I came to understand
+                      something simple: wellness is not a product. It is a practice.
+                      I am bringing that practice home — to Addis Ababa — for the
+                      first time.
+                    </p>
+                    <p className="mt-5">
+                      Go&rsquo;buzz is not entering a market.{" "}
+                      <em className="text-gold">It is creating one.</em>
+                      <span aria-hidden="true" className="ml-1 text-gold/80">&rdquo;</span>
+                    </p>
+                  </blockquote>
+                  <figcaption className="mt-8 flex items-center gap-4">
+                    <PulseLine className="w-16 text-gold" />
+                    <span>
+                      <span className="block text-[12px] font-semibold text-ink">Mack</span>
+                      <span className="mt-0.5 block text-[11px] text-muted">Founder, Go&rsquo;Buzz</span>
+                    </span>
+                  </figcaption>
+                </figure>
               </Reveal>
             </div>
           </div>
@@ -321,10 +333,10 @@ export default function Home() {
             <Reveal>
               <p className="eyebrow">Founding Access</p>
               <h2 className="display mt-6 text-5xl sm:text-6xl">
-                Two hundred members. <em className="text-gold">No more.</em>
+                Limited spaces <em className="text-gold">only.</em>
               </h2>
               <p className="mt-6 max-w-md text-[16px] leading-relaxed text-muted">
-                Go&rsquo;Buzz opens with a founding list of 200. Founding members set
+                Go&rsquo;Buzz opens with a limited founding list. Founding members set
                 the culture of the club — and keep privileges the day the doors open.
               </p>
               <ul className="mt-8 space-y-4">
@@ -344,9 +356,9 @@ export default function Home() {
             <Reveal delay={160}>
               <div className="rounded-3xl border border-line-soft bg-surface p-8 sm:p-10">
                 <div className="flex items-baseline justify-between">
-                  <p className="font-serif text-6xl text-gold">200</p>
+                  <p className="font-serif text-5xl text-gold sm:text-6xl">Limited</p>
                   <p className="text-[11px] font-semibold tracking-[0.22em] text-faint uppercase">
-                    Founding places
+                    Founding spaces
                   </p>
                 </div>
                 <div className="hairline my-7" />
