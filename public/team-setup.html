@@ -1,0 +1,568 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="A beginner-friendly guide to editing the Go'Buzz website with GitHub, VS Code, and Vercel." />
+    <title>Go'Buzz Website Editing Guide</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f5f1e6;
+        --surface: #fffdf7;
+        --ink: #1b1710;
+        --muted: #625a4b;
+        --faint: #8a806b;
+        --gold: #86691c;
+        --gold-bright: #c9a84c;
+        --line: rgba(134, 105, 28, 0.25);
+        --line-soft: rgba(134, 105, 28, 0.13);
+        --success: #276749;
+        --danger: #9b2c2c;
+        --code: #11100d;
+        --code-ink: #f8f1df;
+        --radius: 8px;
+        --sidebar: 19rem;
+      }
+
+      * { box-sizing: border-box; }
+      html { scroll-behavior: smooth; }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font-family: Arial, Helvetica, sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+      button, a { -webkit-tap-highlight-color: transparent; }
+      button, input { font: inherit; }
+      a { color: var(--gold); text-underline-offset: 3px; }
+      a:hover { color: var(--ink); }
+      :focus-visible { outline: 3px solid var(--gold-bright); outline-offset: 3px; }
+
+      .topbar {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        display: flex;
+        min-height: 68px;
+        align-items: center;
+        justify-content: space-between;
+        gap: 24px;
+        padding: 12px clamp(18px, 4vw, 48px);
+        border-bottom: 1px solid var(--line-soft);
+        background: rgba(245, 241, 230, 0.95);
+        backdrop-filter: blur(12px);
+      }
+      .brand { display: flex; align-items: center; gap: 11px; min-width: max-content; }
+      .brand-mark {
+        width: 29px;
+        height: 29px;
+        border: 1px solid var(--gold);
+        border-radius: 50%;
+        position: relative;
+      }
+      .brand-mark::before, .brand-mark::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        height: 1px;
+        background: var(--gold);
+        transform: translateY(-50%);
+      }
+      .brand-mark::before { left: 5px; width: 7px; }
+      .brand-mark::after { right: 5px; width: 7px; }
+      .brand-name { font-family: Georgia, serif; font-size: 17px; font-weight: 700; }
+      .brand-label { color: var(--muted); font-size: 12px; }
+      .top-progress { width: min(330px, 42vw); }
+      .progress-copy { display: flex; justify-content: space-between; margin-bottom: 7px; color: var(--muted); font-size: 11px; }
+      .progress-track { height: 4px; overflow: hidden; background: var(--line-soft); }
+      .progress-fill { width: 0; height: 100%; background: var(--gold); transition: width 260ms ease; }
+
+      .hero {
+        position: relative;
+        min-height: 360px;
+        display: grid;
+        align-items: end;
+        overflow: hidden;
+        background: #15130f url("https://gobuzz-wellness-three.vercel.app/facilities/sauna.jpg") center 55% / cover no-repeat;
+        color: #fffdf7;
+      }
+      .hero::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(90deg, rgba(10,9,8,.92), rgba(10,9,8,.56) 56%, rgba(10,9,8,.18));
+      }
+      .hero-inner {
+        position: relative;
+        z-index: 1;
+        width: min(1160px, 100%);
+        margin: 0 auto;
+        padding: 62px clamp(20px, 5vw, 64px) 56px;
+      }
+      .kicker { margin: 0 0 14px; color: #d9ba61; font-size: 12px; font-weight: 700; }
+      h1 {
+        max-width: 780px;
+        margin: 0;
+        font-family: Georgia, serif;
+        font-size: clamp(2.5rem, 7vw, 5.3rem);
+        font-weight: 400;
+        line-height: .98;
+        letter-spacing: -.025em;
+        text-wrap: balance;
+      }
+      .hero p:last-child { max-width: 610px; margin: 22px 0 0; color: #ded7c7; font-size: 15px; line-height: 1.7; }
+
+      .preflight {
+        width: min(1160px, calc(100% - 40px));
+        margin: 0 auto;
+        padding: 36px 0;
+        border-bottom: 1px solid var(--line);
+      }
+      .preflight h2 { margin: 0 0 8px; font-family: Georgia, serif; font-size: 25px; font-weight: 400; }
+      .preflight > p { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.65; }
+      .owner-list { display: flex; flex-wrap: wrap; gap: 10px; margin: 22px 0 0; padding: 0; list-style: none; }
+      .owner-list li { flex: 1 1 260px; padding: 14px 16px; border: 1px solid var(--line); background: rgba(255,253,247,.54); font-size: 13px; line-height: 1.5; }
+      .owner-list strong { display: block; margin-bottom: 3px; }
+
+      .os-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 18px;
+        width: min(1160px, calc(100% - 40px));
+        margin: 0 auto;
+        padding: 24px 0;
+      }
+      .os-copy strong { display: block; font-size: 14px; }
+      .os-copy span { color: var(--muted); font-size: 12px; }
+      .segmented { display: inline-flex; padding: 3px; border: 1px solid var(--line); background: var(--surface); }
+      .segmented button { min-width: 88px; border: 0; padding: 9px 14px; background: transparent; color: var(--muted); cursor: pointer; }
+      .segmented button[aria-pressed="true"] { background: var(--ink); color: #fffdf7; }
+
+      .app-shell {
+        display: grid;
+        grid-template-columns: var(--sidebar) minmax(0, 1fr);
+        width: min(1160px, calc(100% - 40px));
+        min-height: 640px;
+        margin: 0 auto 64px;
+        border: 1px solid var(--line);
+        background: var(--surface);
+      }
+      .step-nav { border-right: 1px solid var(--line-soft); background: #f0eadb; }
+      .step-nav-header { padding: 22px 20px 16px; color: var(--muted); font-size: 12px; }
+      .step-list { margin: 0; padding: 0 0 16px; list-style: none; }
+      .step-button {
+        width: 100%;
+        display: grid;
+        grid-template-columns: 30px minmax(0, 1fr) 18px;
+        align-items: center;
+        gap: 10px;
+        border: 0;
+        border-top: 1px solid transparent;
+        border-bottom: 1px solid transparent;
+        padding: 12px 18px;
+        background: transparent;
+        color: var(--muted);
+        text-align: left;
+        cursor: pointer;
+      }
+      .step-button:hover { background: rgba(255,253,247,.6); color: var(--ink); }
+      .step-button[aria-current="step"] { border-color: var(--line-soft); background: var(--surface); color: var(--ink); }
+      .step-number { display: grid; width: 28px; height: 28px; place-items: center; border: 1px solid var(--line); border-radius: 50%; font-size: 11px; }
+      .step-button.is-done .step-number { border-color: var(--success); background: var(--success); color: white; }
+      .step-title { font-size: 13px; font-weight: 700; line-height: 1.3; }
+      .step-check { color: var(--success); font-weight: 700; }
+
+      .panel { display: none; min-width: 0; padding: clamp(28px, 5vw, 64px); }
+      .panel.is-active { display: block; animation: enter 220ms ease-out; }
+      @keyframes enter { from { opacity: .55; transform: translateY(5px); } }
+      .panel-count { margin: 0 0 12px; color: var(--gold); font-size: 12px; font-weight: 700; }
+      .panel h2 { max-width: 700px; margin: 0; font-family: Georgia, serif; font-size: clamp(2rem, 4.2vw, 3.5rem); font-weight: 400; line-height: 1.05; letter-spacing: -.02em; text-wrap: balance; }
+      .lede { max-width: 68ch; margin: 18px 0 30px; color: var(--muted); font-size: 15px; line-height: 1.72; }
+      .tasks { margin: 0; padding: 0; list-style: none; counter-reset: task; }
+      .task { position: relative; padding: 20px 0 20px 46px; border-top: 1px solid var(--line-soft); }
+      .task::before {
+        counter-increment: task;
+        content: counter(task);
+        position: absolute;
+        left: 0;
+        top: 18px;
+        display: grid;
+        width: 28px;
+        height: 28px;
+        place-items: center;
+        border: 1px solid var(--line);
+        border-radius: 50%;
+        color: var(--gold);
+        font-size: 11px;
+        font-weight: 700;
+      }
+      .task h3 { margin: 0 0 7px; font-size: 15px; }
+      .task p { max-width: 68ch; margin: 0; color: var(--muted); font-size: 14px; line-height: 1.65; }
+      .task p + p, .task .command, .task .note, .task .links { margin-top: 12px; }
+      .links { display: flex; flex-wrap: wrap; gap: 8px; }
+      .link-button, .plain-button {
+        display: inline-flex;
+        min-height: 40px;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid var(--gold);
+        padding: 9px 14px;
+        background: transparent;
+        color: var(--ink);
+        font-size: 13px;
+        font-weight: 700;
+        text-decoration: none;
+        cursor: pointer;
+      }
+      .link-button:hover, .plain-button:hover { background: var(--gold); color: white; }
+      .command { position: relative; overflow: hidden; background: var(--code); color: var(--code-ink); }
+      .command pre { margin: 0; padding: 16px 88px 16px 17px; overflow-x: auto; font: 13px/1.65 Consolas, "Courier New", monospace; }
+      .copy {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        border: 1px solid rgba(248,241,223,.3);
+        padding: 7px 10px;
+        background: transparent;
+        color: #f8f1df;
+        font-size: 11px;
+        cursor: pointer;
+      }
+      .copy:hover { border-color: #d9ba61; color: #d9ba61; }
+      .note { padding: 13px 15px; background: #eee5cc; color: #4f452e; font-size: 13px; line-height: 1.6; }
+      .note strong { color: var(--ink); }
+      .warning { background: #f4e0de; color: #6f2727; }
+      .success { background: #dfeee6; color: #215d42; }
+      .os-only { display: none; }
+      body[data-os="windows"] .os-windows, body[data-os="mac"] .os-mac { display: block; }
+
+      .file-map { margin-top: 16px; border: 1px solid var(--line); background: #f8f4e9; }
+      .file-row { display: grid; grid-template-columns: 1.5fr 1fr; gap: 20px; padding: 12px 14px; border-bottom: 1px solid var(--line-soft); font-size: 12px; }
+      .file-row:last-child { border-bottom: 0; }
+      .file-row code { overflow-wrap: anywhere; color: var(--ink); font-family: Consolas, "Courier New", monospace; }
+      .file-row span { color: var(--muted); }
+
+      .panel-actions { display: flex; justify-content: space-between; gap: 12px; margin-top: 36px; padding-top: 24px; border-top: 1px solid var(--line); }
+      .primary { border-color: var(--ink); background: var(--ink); color: #fffdf7; }
+      .primary:hover { border-color: var(--gold); background: var(--gold); }
+      .primary.is-done { border-color: var(--success); background: var(--success); }
+
+      .help { width: min(1160px, calc(100% - 40px)); margin: 0 auto 72px; }
+      .help h2 { margin: 0 0 20px; font-family: Georgia, serif; font-size: 30px; font-weight: 400; }
+      details { border-top: 1px solid var(--line); }
+      details:last-of-type { border-bottom: 1px solid var(--line); }
+      summary { padding: 17px 2px; font-size: 14px; font-weight: 700; cursor: pointer; }
+      details p { max-width: 72ch; margin: 0; padding: 0 2px 18px; color: var(--muted); font-size: 14px; line-height: 1.65; }
+      .footer { padding: 28px 20px; background: #0a0908; color: #a99e83; text-align: center; font-size: 12px; }
+      .footer strong { color: #d9ba61; }
+
+      @media (max-width: 800px) {
+        .topbar { align-items: flex-start; }
+        .brand-label { display: none; }
+        .hero { min-height: 330px; }
+        .hero::after { background: rgba(10,9,8,.68); }
+        .os-row { align-items: flex-start; flex-direction: column; }
+        .app-shell { display: block; }
+        .step-nav { border-right: 0; border-bottom: 1px solid var(--line); overflow-x: auto; }
+        .step-nav-header { display: none; }
+        .step-list { display: flex; width: max-content; padding: 8px; }
+        .step-button { width: 132px; grid-template-columns: 28px minmax(0,1fr); padding: 9px; border: 0; }
+        .step-button[aria-current="step"] { border: 0; background: var(--surface); }
+        .step-check { display: none; }
+        .panel { padding: 34px 22px; }
+      }
+
+      @media (max-width: 520px) {
+        .topbar { min-height: 62px; padding-inline: 16px; }
+        .brand-name { font-size: 15px; }
+        .top-progress { width: 38vw; }
+        .progress-copy span:first-child { display: none; }
+        .hero-inner { padding: 52px 20px 40px; }
+        .hero p:last-child { font-size: 14px; }
+        .owner-list { display: block; }
+        .owner-list li + li { margin-top: 8px; }
+        .segmented { width: 100%; }
+        .segmented button { flex: 1; }
+        .app-shell { width: 100%; border-left: 0; border-right: 0; }
+        .file-row { display: block; }
+        .file-row span { display: block; margin-top: 5px; }
+        .panel-actions { align-items: stretch; flex-direction: column-reverse; }
+        .panel-actions button { width: 100%; }
+      }
+
+      @media print {
+        .topbar, .step-nav, .panel-actions, .os-row, .copy { display: none !important; }
+        .hero { min-height: 220px; }
+        .app-shell { display: block; width: 100%; border: 0; }
+        .panel { display: block !important; page-break-before: always; padding: 32px 0; }
+        .panel:first-of-type { page-break-before: auto; }
+        .help { width: 100%; }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        html { scroll-behavior: auto; }
+        *, *::before, *::after { animation: none !important; transition: none !important; }
+      }
+    </style>
+  </head>
+  <body data-os="windows">
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <span><span class="brand-name">Go'Buzz</span> <span class="brand-label">Team guide</span></span>
+      </div>
+      <div class="top-progress" aria-label="Guide progress">
+        <div class="progress-copy"><span>Your progress</span><span id="progress-text">0 of 8 complete</span></div>
+        <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+      </div>
+    </header>
+
+    <section class="hero">
+      <div class="hero-inner">
+        <p class="kicker">No technical background required</p>
+        <h1>Your first Go'Buzz website edit.</h1>
+        <p>Follow one step at a time. By the end, you will have the website running on your laptop, your own teaser-page change on GitHub, and a private Vercel preview ready for review.</p>
+      </div>
+    </section>
+
+    <section class="preflight" aria-labelledby="before-title">
+      <h2 id="before-title">Before you begin</h2>
+      <p>Matty needs to complete these owner-only actions once. Everything else is yours.</p>
+      <ul class="owner-list">
+        <li><strong>1. GitHub access</strong>Invite you as a collaborator on <code>mattyinc/gobuzz</code>.</li>
+        <li><strong>2. Accept the email</strong>You must accept GitHub's invitation before your first push.</li>
+        <li><strong>3. Vercel is automatic</strong>You do not need to install Vercel. GitHub creates the preview and production deployments.</li>
+      </ul>
+    </section>
+
+    <div class="os-row">
+      <div class="os-copy"><strong>Which laptop are you using?</strong><span>The installation instructions will adapt to your choice.</span></div>
+      <div class="segmented" role="group" aria-label="Operating system">
+        <button type="button" data-os-choice="windows" aria-pressed="true">Windows</button>
+        <button type="button" data-os-choice="mac" aria-pressed="false">Mac</button>
+      </div>
+    </div>
+
+    <main class="app-shell">
+      <nav class="step-nav" aria-label="Setup steps">
+        <div class="step-nav-header">Complete these in order</div>
+        <ol class="step-list" id="step-list"></ol>
+      </nav>
+
+      <section class="panel is-active" data-step="0">
+        <p class="panel-count">Step 1 of 8</p>
+        <h2>Get your accounts ready.</h2>
+        <p class="lede">GitHub stores the shared code. VS Code is where you edit it. Vercel turns approved GitHub changes into the live website.</p>
+        <ol class="tasks">
+          <li class="task"><h3>Create or sign in to GitHub</h3><p>Open GitHub and create a free account if you do not already have one. Use an email address you check regularly.</p><div class="links"><a class="link-button" href="https://github.com/signup" target="_blank" rel="noreferrer">Open GitHub sign-up</a></div></li>
+          <li class="task"><h3>Accept Matty's invitation</h3><p>Look for an email from GitHub. Open it and choose <strong>View invitation</strong>, then <strong>Accept invitation</strong>.</p><div class="note"><strong>Checkpoint:</strong> while signed in, you can open <a href="https://github.com/mattyinc/gobuzz" target="_blank" rel="noreferrer">github.com/mattyinc/gobuzz</a>.</div></li>
+          <li class="task"><h3>Know the safety rule</h3><p>Never paste passwords, private keys, or the contents of <code>.env.local</code> into GitHub. The project already tells Git to ignore that file.</p></li>
+        </ol>
+        <div class="panel-actions"><button class="plain-button" type="button" data-prev disabled>Back</button><button class="plain-button primary" type="button" data-complete>Mark complete and continue</button></div>
+      </section>
+
+      <section class="panel" data-step="1">
+        <p class="panel-count">Step 2 of 8</p>
+        <h2>Install Git.</h2>
+        <p class="lede">Git remembers every change and lets both of you work on the same website without emailing files back and forth.</p>
+        <div class="os-only os-windows">
+          <ol class="tasks">
+            <li class="task"><h3>Download Git for Windows</h3><p>Use the official download. Open the downloaded installer and keep the recommended choices by pressing <strong>Next</strong>. Choose <strong>Install</strong> at the end.</p><div class="links"><a class="link-button" href="https://git-scm.com/download/win" target="_blank" rel="noreferrer">Download Git for Windows</a></div></li>
+            <li class="task"><h3>Restart VS Code</h3><p>Close every VS Code window and open it again. This lets VS Code find the new Git installation.</p></li>
+          </ol>
+        </div>
+        <div class="os-only os-mac">
+          <ol class="tasks">
+            <li class="task"><h3>Check whether Git is already available</h3><p>In VS Code, choose <strong>Terminal → New Terminal</strong>. Run the command below. If macOS asks to install developer tools, approve it and wait for the installation.</p><div class="command"><pre><code>git --version</code></pre><button class="copy" type="button">Copy</button></div></li>
+            <li class="task"><h3>Use the official installer if needed</h3><p>If the first method does not work, open Git's official Mac download page and follow one of its listed installation choices.</p><div class="links"><a class="link-button" href="https://git-scm.com/download/mac" target="_blank" rel="noreferrer">Git for macOS</a></div></li>
+          </ol>
+        </div>
+        <ol class="tasks">
+          <li class="task"><h3>Confirm it works</h3><p>Open <strong>Terminal → New Terminal</strong> in VS Code and run:</p><div class="command"><pre><code>git --version</code></pre><button class="copy" type="button">Copy</button></div><div class="note success"><strong>Success looks like:</strong> <code>git version 2.x.x</code>. Your numbers may be different.</div></li>
+          <li class="task"><h3>Tell Git who you are</h3><p>Replace the examples with your own name and the email used for GitHub. Run each line separately.</p><div class="command"><pre><code>git config --global user.name "Your Name"
+git config --global user.email "you@example.com"</code></pre><button class="copy" type="button">Copy</button></div></li>
+        </ol>
+        <div class="panel-actions"><button class="plain-button" type="button" data-prev>Back</button><button class="plain-button primary" type="button" data-complete>Mark complete and continue</button></div>
+      </section>
+
+      <section class="panel" data-step="2">
+        <p class="panel-count">Step 3 of 8</p>
+        <h2>Install Node.js.</h2>
+        <p class="lede">Node.js runs the Go'Buzz website on your laptop. npm comes with it and downloads the project pieces the website needs.</p>
+        <ol class="tasks">
+          <li class="task"><h3>Download the LTS version</h3><p>Open the official Node.js page and choose the version marked <strong>LTS</strong>. LTS means the stable version recommended for most people.</p><div class="links"><a class="link-button" href="https://nodejs.org/en/download" target="_blank" rel="noreferrer">Download Node.js LTS</a></div></li>
+          <li class="task"><h3>Run the installer</h3><p>Accept the standard choices. When it finishes, close and reopen VS Code.</p></li>
+          <li class="task"><h3>Confirm Node and npm</h3><p>Open a new VS Code terminal. Run both commands:</p><div class="command"><pre><code>node --version
+npm --version</code></pre><button class="copy" type="button">Copy</button></div><div class="note success"><strong>Success:</strong> each command prints a number beginning with <code>v</code> or a version number. Red error text means you should restart VS Code and try again.</div></li>
+        </ol>
+        <div class="panel-actions"><button class="plain-button" type="button" data-prev>Back</button><button class="plain-button primary" type="button" data-complete>Mark complete and continue</button></div>
+      </section>
+
+      <section class="panel" data-step="3">
+        <p class="panel-count">Step 4 of 8</p>
+        <h2>Download the website from GitHub.</h2>
+        <p class="lede">In Git language, downloading a working copy for the first time is called “cloning.” You only clone once.</p>
+        <ol class="tasks">
+          <li class="task"><h3>Choose a normal projects folder</h3><p>Good choices are <strong>Documents</strong> or a folder called <strong>Projects</strong>. Avoid OneDrive, iCloud Drive, Dropbox, and Google Drive folders because syncing can confuse Git.</p></li>
+          <li class="task"><h3>Clone in VS Code</h3><p>Press <strong>Ctrl + Shift + P</strong> on Windows or <strong>Command + Shift + P</strong> on Mac. Type <strong>Git: Clone</strong>, select it, and paste this address:</p><div class="command"><pre><code>https://github.com/mattyinc/gobuzz.git</code></pre><button class="copy" type="button">Copy</button></div><p>Choose your projects folder. When VS Code asks whether to open the cloned repository, choose <strong>Open</strong>. If asked whether you trust the authors, choose <strong>Yes</strong>.</p></li>
+          <li class="task"><h3>Sign in when GitHub asks</h3><p>Your browser may open. Sign in to GitHub and authorize VS Code. Return to VS Code when finished.</p></li>
+          <li class="task"><h3>Confirm the right folder is open</h3><p>The Explorer on the left should show <code>src</code>, <code>public</code>, and <code>package.json</code>.</p></li>
+        </ol>
+        <div class="panel-actions"><button class="plain-button" type="button" data-prev>Back</button><button class="plain-button primary" type="button" data-complete>Mark complete and continue</button></div>
+      </section>
+
+      <section class="panel" data-step="4">
+        <p class="panel-count">Step 5 of 8</p>
+        <h2>Run Go'Buzz on your laptop.</h2>
+        <p class="lede">This creates a private local copy at <code>localhost</code>. Only you can see it, and changing it does not affect the live website.</p>
+        <ol class="tasks">
+          <li class="task"><h3>Download the project dependencies</h3><p>In VS Code, choose <strong>Terminal → New Terminal</strong>. Confirm the terminal path ends in <code>gobuzz</code>, then run:</p><div class="command"><pre><code>npm install</code></pre><button class="copy" type="button">Copy</button></div><p>This can take several minutes the first time. Warnings are usually fine; wait until the terminal lets you type again.</p></li>
+          <li class="task"><h3>Start the local website</h3><div class="command"><pre><code>npm run dev</code></pre><button class="copy" type="button">Copy</button></div><div class="note"><strong>Keep this terminal open.</strong> Closing it stops the local website. To stop it deliberately, click the terminal and press <strong>Ctrl + C</strong>.</div></li>
+          <li class="task"><h3>Open the teaser page</h3><p>Hold Ctrl or Command and click the terminal's localhost link, or open this address in your browser:</p><div class="links"><a class="link-button" href="http://localhost:3000/teaser" target="_blank" rel="noreferrer">Open local teaser page</a></div><div class="note success"><strong>Checkpoint:</strong> you can see “Move. Think. Recover.” and the current sauna section.</div></li>
+        </ol>
+        <div class="panel-actions"><button class="plain-button" type="button" data-prev>Back</button><button class="plain-button primary" type="button" data-complete>Mark complete and continue</button></div>
+      </section>
+
+      <section class="panel" data-step="5">
+        <p class="panel-count">Step 6 of 8</p>
+        <h2>Make your teaser-page change.</h2>
+        <p class="lede">Create your own branch first. A branch is a private lane for your edit, so the live website stays untouched while you work.</p>
+        <ol class="tasks">
+          <li class="task"><h3>Create a branch</h3><p>Open a second terminal using the <strong>+</strong> button in the terminal area. Run:</p><div class="command"><pre><code>git switch -c brother/teaser-update</code></pre><button class="copy" type="button">Copy</button></div><div class="note"><strong>Use a new name next time:</strong> for example <code>brother/change-headline</code> or <code>brother/new-photo</code>.</div></li>
+          <li class="task"><h3>Open the teaser file</h3><p>In the left Explorer, open these folders in order: <code>src</code> → <code>app</code> → <code>teaser</code>, then open <code>page.tsx</code>.</p><div class="file-map"><div class="file-row"><code>src/app/teaser/page.tsx</code><span>Words, sections, and the sauna image</span></div><div class="file-row"><code>src/components/hero.tsx</code><span>Move / Think / Recover hero</span></div><div class="file-row"><code>public/facilities/</code><span>Sauna and facility image files</span></div></div></li>
+          <li class="task"><h3>Find the exact section</h3><p>With <code>page.tsx</code> open, press <strong>Ctrl + F</strong> or <strong>Command + F</strong>. Search for:</p><div class="command"><pre><code>Something quieter is taking shape.</code></pre><button class="copy" type="button">Copy</button></div><p>Edit only the words between the opening and closing tags. Be careful not to remove characters such as <code>&lt;</code>, <code>&gt;</code>, braces, or quotation marks around code.</p></li>
+          <li class="task"><h3>Save and inspect</h3><p>Press <strong>Ctrl + S</strong> or <strong>Command + S</strong>. Your browser should update automatically. Check the page on a narrow browser window too, so long text does not overflow.</p><div class="note warning"><strong>If the page turns red:</strong> undo your last edit with Ctrl/Command + Z. Read the first error, or ask Matty before changing more code.</div></li>
+        </ol>
+        <div class="panel-actions"><button class="plain-button" type="button" data-prev>Back</button><button class="plain-button primary" type="button" data-complete>Mark complete and continue</button></div>
+      </section>
+
+      <section class="panel" data-step="6">
+        <p class="panel-count">Step 7 of 8</p>
+        <h2>Save the change to GitHub.</h2>
+        <p class="lede">Saving in VS Code writes the file on your laptop. These Git commands record the change and send your branch to GitHub.</p>
+        <ol class="tasks">
+          <li class="task"><h3>See what changed</h3><div class="command"><pre><code>git status</code></pre><button class="copy" type="button">Copy</button></div><p>You should see <code>src/app/teaser/page.tsx</code> listed as modified.</p></li>
+          <li class="task"><h3>Run the safety checks</h3><div class="command"><pre><code>npm run lint
+npm run build</code></pre><button class="copy" type="button">Copy</button></div><p>Run one line at a time. Continue only when both finish without an error. The build can take a minute.</p></li>
+          <li class="task"><h3>Record your edit</h3><div class="command"><pre><code>git add src/app/teaser/page.tsx
+git commit -m "Update teaser sauna section"</code></pre><button class="copy" type="button">Copy</button></div></li>
+          <li class="task"><h3>Push your branch</h3><div class="command"><pre><code>git push -u origin brother/teaser-update</code></pre><button class="copy" type="button">Copy</button></div><p>If a browser opens, authorize GitHub. Refresh the repository page afterward.</p></li>
+        </ol>
+        <div class="panel-actions"><button class="plain-button" type="button" data-prev>Back</button><button class="plain-button primary" type="button" data-complete>Mark complete and continue</button></div>
+      </section>
+
+      <section class="panel" data-step="7">
+        <p class="panel-count">Step 8 of 8</p>
+        <h2>Review, merge, and deploy.</h2>
+        <p class="lede">GitHub and Vercel now do the heavy lifting. Your branch gets a preview first; production changes only after the pull request is merged.</p>
+        <ol class="tasks">
+          <li class="task"><h3>Open a pull request</h3><p>On the GitHub repository, choose <strong>Compare &amp; pull request</strong>. Write a short summary of what you changed, then choose <strong>Create pull request</strong>.</p><div class="links"><a class="link-button" href="https://github.com/mattyinc/gobuzz/pulls" target="_blank" rel="noreferrer">Open Go'Buzz pull requests</a></div></li>
+          <li class="task"><h3>Wait for the Vercel preview</h3><p>Vercel automatically builds your branch. In the pull request, wait for the Vercel check to finish, then open its <strong>Preview</strong> link. Check desktop and mobile before merging.</p><div class="note"><strong>A preview is not the live website.</strong> It is a safe, shareable copy for reviewing your exact branch.</div></li>
+          <li class="task"><h3>Ask Matty to review and merge</h3><p>When both of you approve the preview, merge the pull request into <code>main</code>. The connected Vercel project automatically deploys <code>main</code> to production.</p></li>
+          <li class="task"><h3>Start clean next time</h3><p>Before every new edit, return to <code>main</code>, download the latest work, and create a fresh branch:</p><div class="command"><pre><code>git switch main
+git pull
+git switch -c brother/describe-the-next-change</code></pre><button class="copy" type="button">Copy</button></div><div class="note success"><strong>You did it.</strong> You edited the real project, reviewed it safely, and used the same workflow professional teams use.</div></li>
+        </ol>
+        <div class="panel-actions"><button class="plain-button" type="button" data-prev>Back</button><button class="plain-button primary" type="button" data-complete>Mark guide complete</button></div>
+      </section>
+    </main>
+
+    <section class="help" aria-labelledby="help-title">
+      <h2 id="help-title">When something does not work</h2>
+      <details><summary>“git” or “node” is not recognized</summary><p>Close every VS Code window, reopen it, and open a new terminal. If the problem remains, restart the laptop. Then rerun <code>git --version</code> or <code>node --version</code>.</p></details>
+      <details><summary>Windows says npm scripts are disabled</summary><p>In VS Code's Terminal panel, open the profile menu beside the <strong>+</strong> button, choose <strong>Select Default Profile</strong>, select <strong>Command Prompt</strong>, and open a new terminal. Run the npm command there.</p></details>
+      <details><summary>Port 3000 is already in use</summary><p>The terminal may automatically offer <code>localhost:3001</code>. Use that address. Or stop the older server by clicking its terminal and pressing Ctrl + C.</p></details>
+      <details><summary>The invitation form does not save locally</summary><p>Visual teaser edits do not need private credentials. Full Supabase testing requires a local environment file from Matty. Share it through a password manager, never GitHub, and name it exactly <code>.env.local</code>.</p></details>
+      <details><summary>Git reports a merge conflict</summary><p>Stop and ask Matty for help. Do not delete unfamiliar code or force the push. Your work is still saved on your branch.</p></details>
+      <details><summary>I am afraid I changed the live website</summary><p>Changes on your laptop and your <code>brother/...</code> branch are not production. The live website changes only after the pull request is merged into <code>main</code> and Vercel finishes its production deployment.</p></details>
+      <p style="margin-top:24px"><button class="plain-button" id="reset" type="button">Reset guide progress</button></p>
+    </section>
+
+    <footer class="footer"><strong>Go'Buzz Wellness</strong> · Internal collaboration guide · Keep moving one step at a time.</footer>
+
+    <script>
+      (() => {
+        const steps = [
+          "Accounts and access", "Install Git", "Install Node.js", "Clone the project",
+          "Run it locally", "Edit the teaser", "Push to GitHub", "Preview and deploy"
+        ];
+        const storageKey = "gobuzz-team-guide-v1";
+        let state = { active: 0, done: [], os: "windows" };
+        try { state = { ...state, ...JSON.parse(localStorage.getItem(storageKey) || "{}") }; } catch (_) {}
+        if (!Array.isArray(state.done)) state.done = [];
+
+        const list = document.getElementById("step-list");
+        const panels = [...document.querySelectorAll(".panel")];
+        const progressText = document.getElementById("progress-text");
+        const progressFill = document.getElementById("progress-fill");
+
+        function save() { localStorage.setItem(storageKey, JSON.stringify(state)); }
+        function renderNav() {
+          list.innerHTML = steps.map((title, index) => `
+            <li><button class="step-button ${state.done.includes(index) ? "is-done" : ""}" type="button" data-go="${index}" ${state.active === index ? 'aria-current="step"' : ""}>
+              <span class="step-number">${state.done.includes(index) ? "✓" : index + 1}</span>
+              <span class="step-title">${title}</span>
+              <span class="step-check">${state.done.includes(index) ? "✓" : ""}</span>
+            </button></li>`).join("");
+          list.querySelectorAll("[data-go]").forEach(button => button.addEventListener("click", () => go(Number(button.dataset.go))));
+        }
+        function updateProgress() {
+          const complete = new Set(state.done).size;
+          progressText.textContent = `${complete} of ${steps.length} complete`;
+          progressFill.style.width = `${complete / steps.length * 100}%`;
+        }
+        function go(index, scroll = true) {
+          state.active = Math.max(0, Math.min(index, steps.length - 1));
+          panels.forEach((panel, i) => panel.classList.toggle("is-active", i === state.active));
+          const completeButton = panels[state.active].querySelector("[data-complete]");
+          const isDone = state.done.includes(state.active);
+          completeButton.classList.toggle("is-done", isDone);
+          completeButton.textContent = isDone
+            ? (state.active === steps.length - 1 ? "Guide complete" : "Completed - continue")
+            : (state.active === steps.length - 1 ? "Mark guide complete" : "Mark complete and continue");
+          renderNav();
+          save();
+          if (scroll) document.querySelector(".app-shell").scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+        function renderOs() {
+          document.body.dataset.os = state.os;
+          document.querySelectorAll("[data-os-choice]").forEach(button => button.setAttribute("aria-pressed", String(button.dataset.osChoice === state.os)));
+        }
+
+        document.querySelectorAll("[data-os-choice]").forEach(button => button.addEventListener("click", () => {
+          state.os = button.dataset.osChoice;
+          renderOs(); save();
+        }));
+        document.querySelectorAll("[data-prev]").forEach(button => button.addEventListener("click", () => go(state.active - 1)));
+        document.querySelectorAll("[data-complete]").forEach(button => button.addEventListener("click", () => {
+          if (!state.done.includes(state.active)) state.done.push(state.active);
+          updateProgress();
+          button.classList.add("is-done");
+          button.textContent = state.active === steps.length - 1 ? "Guide complete" : "Completed";
+          save();
+          if (state.active < steps.length - 1) setTimeout(() => go(state.active + 1), 250);
+          else renderNav();
+        }));
+        document.querySelectorAll(".copy").forEach(button => button.addEventListener("click", async () => {
+          const text = button.previousElementSibling.innerText;
+          try {
+            await navigator.clipboard.writeText(text);
+            const old = button.textContent; button.textContent = "Copied";
+            setTimeout(() => button.textContent = old, 1400);
+          } catch (_) {
+            const range = document.createRange(); range.selectNodeContents(button.previousElementSibling);
+            const selection = window.getSelection(); selection.removeAllRanges(); selection.addRange(range);
+          }
+        }));
+        document.getElementById("reset").addEventListener("click", () => {
+          state = { active: 0, done: [], os: state.os }; save(); updateProgress(); go(0); location.reload();
+        });
+
+        renderOs(); updateProgress(); go(state.active, false);
+      })();
+    </script>
+  </body>
+</html>
