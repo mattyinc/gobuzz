@@ -33,6 +33,16 @@ function getDb(): Database.Database {
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
     CREATE INDEX IF NOT EXISTS idx_bookings_slot ON bookings (facility, date, start);
+    CREATE TABLE IF NOT EXISTS invitations (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      email TEXT NOT NULL UNIQUE,
+      phone TEXT,
+      source TEXT NOT NULL DEFAULT 'teaser',
+      status TEXT NOT NULL DEFAULT 'pending',
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_invitations_created_at ON invitations (created_at DESC);
   `);
   migrateDb(db);
   return db;
@@ -67,6 +77,22 @@ export type BookingRow = {
   notes: string | null;
   created_at: string;
 };
+
+export function createInvitationSqlite(input: {
+  name: string;
+  email: string;
+  phone?: string;
+  source?: string;
+}): { alreadyExists: boolean } {
+  const result = getDb()
+    .prepare(
+      `INSERT OR IGNORE INTO invitations (name, email, phone, source)
+       VALUES (?, ?, ?, ?)`
+    )
+    .run(input.name, input.email, input.phone || null, input.source ?? "teaser");
+
+  return { alreadyExists: result.changes === 0 };
+}
 
 /** spots already taken per start time for one facility/date */
 export function bookedBySlot(facility: FacilityId, date: string): Map<string, number> {

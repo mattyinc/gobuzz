@@ -8,14 +8,18 @@ import { TextReveal } from "./text-reveal";
 
 const EASE = [0.16, 1, 0.3, 1] as const;
 
-export function Hero() {
+export function Hero({ minimal = false }: { minimal?: boolean }) {
   const { scrollY } = useScroll();
   // Ghost logo drifts upward as user scrolls
   const logoY = useTransform(scrollY, [0, 700], [0, -100]);
   const logoOpacity = useTransform(scrollY, [0, 400], [0.05, 0]);
 
   return (
-    <section className="relative flex min-h-svh items-center overflow-hidden">
+    <section
+      className={`relative flex items-center overflow-hidden ${
+        minimal ? "min-h-[calc(100svh-2.5rem)]" : "min-h-svh"
+      }`}
+    >
       {/* warm ember glow, bottom left */}
       <div
         aria-hidden="true"
@@ -53,32 +57,34 @@ export function Hero() {
           </TextReveal>
         </h1>
 
-        <motion.div
-          className="mt-12 max-w-md"
-          initial={{ opacity: 0, y: 22 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.95, ease: EASE }}
-        >
-          <p className="text-[17px] leading-relaxed text-muted">
-            A club built around heat, cold, and stillness — saunas,
-            ice baths, and space to reset in the heart of the city.
-          </p>
-          <div className="mt-8 flex flex-wrap items-center gap-4">
-            <Link
-              href="/book"
-              className="btn-shimmer group flex h-13 items-center gap-2.5 rounded-full bg-gold px-8 text-[14px] font-semibold tracking-[0.04em] text-bg transition-all duration-300 active:scale-[0.97] hover:bg-gold-bright"
-            >
-              Book a Session
-              <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
-            </Link>
-            <Link
-              href="#method"
-              className="flex h-13 items-center rounded-full border border-line px-8 text-[14px] font-medium text-ink transition-all duration-300 active:scale-[0.97] hover:border-gold hover:text-gold"
-            >
-              The Method
-            </Link>
-          </div>
-        </motion.div>
+        {!minimal && (
+          <motion.div
+            className="mt-12 max-w-md"
+            initial={{ opacity: 0, y: 22 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.95, ease: EASE }}
+          >
+            <p className="text-[17px] leading-relaxed text-muted">
+              A club built around heat, cold, and stillness — saunas,
+              ice baths, and space to reset in the heart of the city.
+            </p>
+            <div className="mt-8 flex flex-wrap items-center gap-4">
+              <Link
+                href="/book"
+                className="btn-shimmer group flex h-13 items-center gap-2.5 rounded-full bg-gold px-8 text-[14px] font-semibold tracking-[0.04em] text-bg transition-all duration-300 active:scale-[0.97] hover:bg-gold-bright"
+              >
+                Book a Session
+                <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
+              </Link>
+              <Link
+                href="#method"
+                className="flex h-13 items-center rounded-full border border-line px-8 text-[14px] font-medium text-ink transition-all duration-300 active:scale-[0.97] hover:border-gold hover:text-gold"
+              >
+                The Method
+              </Link>
+            </div>
+          </motion.div>
+        )}
       </div>
     </section>
   );

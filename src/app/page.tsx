@@ -144,7 +144,7 @@ export default function Home() {
                       I grew up in Ethiopia and rebuilt myself in Australia. Through
                       fitness training, psychology, and years of working at the
                       intersection of physical and mental health, I came to understand
-                      something simple: wellness is not a product. It is a practice.
+                      something simple: wellness is not a product, it is a practice.
                       I am bringing that practice home — to Addis Ababa — for the
                       first time.
                     </p>
